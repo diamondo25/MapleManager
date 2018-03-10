@@ -1,0 +1,24 @@
+1.0.2.0:
+- Add animation screen
+- Replace FolderSelectDialog with win7 style dialog
+- Report compressed ints/longs as sbyte when it wasnt a -127
+- Rewrote internal listing of the treeview. Nodes are now a WZTreeNode
+- You can now access the form through Program.MainForm
+
+1.0.1.1:
+- Add icon
+- Fix copying to clipboard with transparency
+- Add save image to file
+
+1.0.1.0:
+- Support for a script folder (will compile everything in the folder)
+- Support for images (even tiled ones)
+- Add option to copy image to clipboard under Edit
+- Add view for image
+- Resolve images for UOLs in view
+- Recursive UOL resolving for info field
+- Report error when UOL does not point to anything
+- Change UI a bit
+
+1.0.0.0:
+- Initial release
