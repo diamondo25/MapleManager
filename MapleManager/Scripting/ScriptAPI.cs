@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using MapleManager.Controls;
+using MapleManager.WzTools;
 using MapleManager.WzTools.FileSystem;
 using MapleManager.WzTools.Objects;
 using Int8 = System.SByte;
@@ -29,6 +31,7 @@ namespace MapleManager
         public UInt64 GetUInt64(string path) => GetNode(path).ToUInt64();
 
         public string GetString(string path) => GetNode(path).ToString();
+        public abstract WZTreeNode TryGetTreeNode();
 
         public abstract IEnumerator<ScriptNode> GetEnumerator();
 
@@ -47,7 +50,7 @@ namespace MapleManager
             _parent = parent;
         }
 
-        private ScriptNode LoadTreeNodeInfo(TreeNode node, string key)
+        private ScriptNode LoadTreeNodeInfo(WZTreeNode node, string key)
         {
             var tnValue = node.Tag;
             object obj = null;
@@ -56,16 +59,22 @@ namespace MapleManager
                 case null:
                     obj = node;
                     break;
-                case FSFile file:
+                case NameSpaceFile file:
                     obj = file.Object;
                     break;
-                case FSDirectory dir:
+                case NameSpaceDirectory dir:
                     obj = node;
                     break;
+                default: obj = tnValue; break;
             }
 
             return new ScriptNode(obj, this) { Name = key };
+        }
 
+        public override WZTreeNode TryGetTreeNode()
+        {
+            if (_obj is PcomObject po) return po.TreeNode;
+            return null;
         }
 
         public ScriptNode this[string key]
@@ -81,18 +90,18 @@ namespace MapleManager
                     case TreeNode tn:
                         if (tn.Nodes.ContainsKey(key))
                         {
-                            return LoadTreeNodeInfo(tn.Nodes[key], key);
+                            return LoadTreeNodeInfo(tn.Nodes[key] as WZTreeNode, key);
                         }
                         return null;
                     case TreeView tv:
                         if (tv.Nodes.ContainsKey(key))
                         {
-                            return LoadTreeNodeInfo(tv.Nodes[key], key);
+                            return LoadTreeNodeInfo(tv.Nodes[key] as WZTreeNode, key);
                         }
                         return null;
                 }
-
-                throw new Exception("??? Don't know how to handle this type: " + _obj);
+                
+                throw new Exception("??? Don't know how to handle this type (key: " + key + "): " + _obj);
             }
         }
 
@@ -295,7 +304,7 @@ namespace MapleManager
                         {
                             nodes.Add(v);
                         }
-                        return nodes.Select(x => LoadTreeNodeInfo(x, x.Name));
+                        return nodes.Select(x => LoadTreeNodeInfo(x as WZTreeNode, x.Name));
                     }
                 case TreeView tv:
                     {
@@ -304,7 +313,7 @@ namespace MapleManager
                         {
                             nodes.Add(v);
                         }
-                        return nodes.Select(x => LoadTreeNodeInfo(x, x.Name));
+                        return nodes.Select(x => LoadTreeNodeInfo(x as WZTreeNode, x.Name));
                     }
             }
 

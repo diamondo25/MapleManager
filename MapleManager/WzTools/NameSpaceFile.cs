@@ -1,20 +1,10 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using MapleManager.WzTools.Objects;
 
 namespace MapleManager.WzTools
 {
     class NameSpaceFile : NameSpaceNode
     {
-        [Flags]
-        public enum ProcessingResult
-        {
-            ValidatedMaps = 1,
-
-        }
-
-        public ProcessingResult Processed { get; set; }
-
         public virtual BinaryReader GetReader()
         {
             return null;
@@ -24,7 +14,6 @@ namespace MapleManager.WzTools
         {
             return "File: " + Name;
         }
-
 
         protected PcomObject _obj = null;
 
@@ -37,7 +26,10 @@ namespace MapleManager.WzTools
                     var reader = GetReader();
                     _obj = PcomObject.LoadFromBlob(reader, (int)reader.BaseStream.Length);
                     if (_obj != null)
+                    {
                         _obj.Name = Name;
+                        _obj.TreeNode = TreeNode;
+                    }
                 }
                 return _obj;
             }

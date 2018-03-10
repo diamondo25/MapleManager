@@ -42,6 +42,37 @@ namespace MapleManager.Scripts.Animator
             var wtn = (WZTreeNode)e.Node;
             var tag = wtn.WzObject;
 
+            if (tag is WzProperty && wtn.Name.EndsWith(".img"))
+            {
+                var prop = (WzProperty) tag;
+                
+                try_get_anim:
+                if (prop.HasKey("move")) tag = prop["move"];
+                else if (prop.HasKey("fly")) tag = prop["fly"];
+                else if (prop.HasKey("die")) tag = prop["die"];
+                else if (prop.HasKey("stand")) tag = prop["stand"];
+                else
+                {
+                    if (prop.HasKey("info") && prop["info"] is WzProperty)
+                    {
+                        prop = (WzProperty) prop["info"];
+                        if (prop.HasKey("link"))
+                        {
+                            var actualInfo = e.Node.Parent.Nodes[(string) prop["link"] + ".img"];
+                            if (actualInfo is WZTreeNode)
+                            {
+                                wtn = (actualInfo as WZTreeNode);
+                                Program.MainForm.TryLoadNode(wtn);
+                                prop = (WzProperty)wtn.WzObject;
+                                goto try_get_anim;
+
+                            }
+                        }
+                    }
+                    return;
+                }
+            }
+
             object workingObject = tag;
             if (workingObject is WzUOL)
             {
@@ -95,14 +126,9 @@ namespace MapleManager.Scripts.Animator
                         frame.Y = originProp.Y;
                     }
 
-                    if (actualImage.HasKey("delay"))
-                    {
-                        frame.delay = actualImage.GetInt32("delay");
-                    }
-                    else
-                    {
-                        frame.delay = 100;
-                    }
+                    frame.delay = actualImage.HasKey("delay") ? actualImage.GetInt32("delay") : 100;
+                    frame.a0 = actualImage.HasKey("a0") ? actualImage.GetInt32("a0") : 255;
+                    frame.a1 = actualImage.HasKey("a1") ? actualImage.GetInt32("a1") : 255;
 
                     frame.Width = actualImage.Width;
                     frame.Height = actualImage.Height;

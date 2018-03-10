@@ -37,7 +37,7 @@ public abstract class ScriptAPI : IEnumerable<ScriptNode>
 ```
 
 For example, to iterate over all maps:
-```
+```csharp
 using System;
 
 namespace MapleManager.Scripts

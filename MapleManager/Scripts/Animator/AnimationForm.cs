@@ -1,6 +1,7 @@
 ﻿
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -11,6 +12,7 @@ namespace MapleManager.Scripts.Animator
         public AnimationForm()
         {
             InitializeComponent();
+            ResizeRedraw = true;
         }
 
         private Stopwatch sw = new Stopwatch();
@@ -67,13 +69,17 @@ namespace MapleManager.Scripts.Animator
             pictureBox1.Image = frame.Image.Tile;
             pictureBox1.Width = frame.Width;
             pictureBox1.Height = frame.Height;
-            pictureBox1.Top = (Height / 2) + -frame.Y;
+            pictureBox1.Top = (int)((Height * 0.75) + -frame.Y);
             pictureBox1.Left = (Width / 2) + -frame.X;
         }
 
 
         private void AnimationForm_Paint(object sender, PaintEventArgs e)
         {
+            var pen = new Pen(Color.Black);
+            var y = (int)(Height * 0.75);
+            e.Graphics.DrawLine(pen, 0, y, Width, y);
+
         }
 
         private void AnimationForm_Load(object sender, System.EventArgs e)
@@ -86,6 +92,9 @@ namespace MapleManager.Scripts.Animator
             if (frames.Count == 0) return;
             if (totalDuration == 0) return;
             SetFrameByTime(sw.ElapsedMilliseconds);
+
+            
+
         }
     }
 }

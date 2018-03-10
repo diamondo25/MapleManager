@@ -86,6 +86,7 @@
     <Compile Include="Scripts\Animator\Animator.cs" />
     <Compile Include="Scripts\Animator\FrameInfo.cs" />
     <Compile Include="Scripts\Hurr\TestScript.cs" />
+    <Compile Include="Scripts\StringsLoader\StringsLoader.cs" />
     <Compile Include="Scripts\TestScript.cs" />
     <Compile Include="Validators\MapValidator.cs" />
     <Compile Include="Validators\WzTreeView.cs" />

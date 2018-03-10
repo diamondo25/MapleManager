@@ -11,6 +11,7 @@ namespace MapleManager.Controls
     public class WZTreeNode : TreeNode
     {
         public object WzObject { get; set; }
+        
 
         public WZTreeNode() : base() { }
 
@@ -158,9 +159,9 @@ namespace MapleManager.Controls
 
 
 
-                var infoLinkNode = Nodes["info"]?.Nodes["link"];
+                var infoLinkNode = Nodes["info"]?.Nodes["link"] as WZTreeNode;
                 if (infoLinkNode != null)
-                    Text += " (link: " + infoLinkNode.Tag + ")";
+                    Text += " (link: " + infoLinkNode.WzObject + ")";
             }
             else
             {

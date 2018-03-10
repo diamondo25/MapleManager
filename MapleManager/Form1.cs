@@ -52,6 +52,65 @@ namespace MapleManager
 
         }
 
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+            var tsmi = scriptsToolStripMenuItem;
+
+            void addScript(string scriptName, string path)
+            {
+                var mi = new ToolStripMenuItem
+                {
+                    Text = scriptName,
+                    Name = path
+                };
+
+
+                var recompileItem = new ToolStripMenuItem
+                {
+                    Text = "Recompile",
+                    Tag = mi,
+                };
+                recompileItem.Click += RecompileScriptItem;
+                mi.DropDownItems.Add(recompileItem);
+
+                var startItem = new ToolStripMenuItem
+                {
+                    Text = "Start",
+                    Tag = mi,
+                };
+                startItem.Click += RunScriptItem;
+                mi.DropDownItems.Add(startItem);
+
+
+                var stopItem = new ToolStripMenuItem
+                {
+                    Text = "Stop",
+                    Tag = mi,
+                };
+                stopItem.Click += StopScriptItem;
+                mi.DropDownItems.Add(stopItem);
+
+                RecompileScriptItem(recompileItem, null);
+
+                tsmi.DropDownItems.Add(mi);
+            }
+
+            foreach (var scriptFile in new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, "Scripts")).GetFiles("*.cs"))
+            {
+                addScript(scriptFile.Name, scriptFile.FullName);
+            }
+
+            foreach (var scriptDir in new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, "Scripts")).GetDirectories())
+            {
+                addScript(scriptDir.Name, scriptDir.FullName);
+            }
+
+            var anim = new Animator();
+            anim.Start(_mainScriptNode);
+        }
+
+
         private void ResetTree()
         {
             tvData.Nodes.Clear();
@@ -60,7 +119,10 @@ namespace MapleManager
                 var node = new WZTreeNode();
                 node.Name = name;
                 node.Text = name;
-                node.Tag = new NameSpaceDirectory();
+                node.Tag = new NameSpaceDirectory
+                {
+                    TreeNode = node
+                };
                 tvData.Nodes.Add(node);
                 Root[name] = node;
             }
@@ -159,6 +221,7 @@ namespace MapleManager
                 node.Name = name;
                 node.Text = name;
                 node.Tag = kvp.Value;
+                kvp.Value.TreeNode = node;
                 parentNode.Nodes.Add(node);
 
                 node.ToolTipText = "-- Not loaded --";
@@ -296,64 +359,6 @@ namespace MapleManager
             scriptInterface = null;
             return false;
         }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            //var anim = new Animator();
-            //anim.Start(_mainScriptNode);
-
-            var tsmi = scriptsToolStripMenuItem;
-
-            void addScript(string scriptName, string path)
-            {
-                var mi = new ToolStripMenuItem
-                {
-                    Text = scriptName,
-                    Name = path
-                };
-
-
-                var recompileItem = new ToolStripMenuItem
-                {
-                    Text = "Recompile",
-                    Tag = mi,
-                };
-                recompileItem.Click += RecompileScriptItem;
-                mi.DropDownItems.Add(recompileItem);
-
-                var startItem = new ToolStripMenuItem
-                {
-                    Text = "Start",
-                    Tag = mi,
-                };
-                startItem.Click += RunScriptItem;
-                mi.DropDownItems.Add(startItem);
-
-
-                var stopItem = new ToolStripMenuItem
-                {
-                    Text = "Stop",
-                    Tag = mi,
-                };
-                stopItem.Click += StopScriptItem;
-                mi.DropDownItems.Add(stopItem);
-
-                RecompileScriptItem(recompileItem, null);
-
-                tsmi.DropDownItems.Add(mi);
-            }
-
-            foreach (var scriptFile in new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, "Scripts")).GetFiles("*.cs"))
-            {
-                addScript(scriptFile.Name, scriptFile.FullName);
-            }
-
-            foreach (var scriptDir in new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, "Scripts")).GetDirectories())
-            {
-                addScript(scriptDir.Name, scriptDir.FullName);
-            }
-        }
-
         private void RecompileScriptItem(object sender, EventArgs eventArgs)
         {
             var mi = sender as ToolStripMenuItem;
@@ -418,147 +423,13 @@ namespace MapleManager
             if (parentNode.Nodes[0].Text == DummyNodeName) return true;
             return false;
         }
-
-        private void AddDummyNode(TreeNode parentNode)
-        {
-            parentNode.Nodes.Add(DummyNodeName);
-        }
-
-        private void NameNonPcomObject(TreeNode parentNode, object obj)
-        {
-            parentNode.ToolTipText = obj?.ToString();
-        }
-
-        private void FinalTryBeforeDummyNode(TreeNode parentNode, object obj)
-        {
-            if (obj is PcomObject)
-                AddDummyNode(parentNode);
-            else
-                NameNonPcomObject(parentNode, obj);
-        }
-
-        private int deep = 0;
-        private void BuildTreeFromData(TreeNode parentNode, object obj, bool recursive = false)
-        {
-            deep++;
-            if (!recursive || deep >= 10)
-                recursive = false;
-
-            object nameNode = null;
-            if (obj is WzProperty prop)
-            {
-                parentNode.ToolTipText = "Property";
-                foreach (var kvp in prop)
-                {
-                    var subNode = parentNode.Nodes.Add(kvp.Key, kvp.Key);
-                    subNode.Tag = kvp.Value;
-                    if (recursive)
-                        BuildTreeFromData(subNode, kvp.Value, recursive);
-                    else
-                        FinalTryBeforeDummyNode(subNode, kvp.Value);
-                }
-
-                string mapName = null, streetName = null, name = null,
-                     id = null, type = null;
-                TreeNode tn;
-                if ((tn = parentNode.Nodes["name"]) != null) name = tn.Tag as string;
-                if ((tn = parentNode.Nodes["streetName"]) != null) streetName = tn.Tag as string;
-                if ((tn = parentNode.Nodes["mapName"]) != null) mapName = tn.Tag as string;
-                if ((tn = parentNode.Nodes["id"]) != null) id = tn.Tag as string;
-                if ((tn = parentNode.Nodes["type"]) != null) type = tn.Tag as string;
-
-                if (mapName != null && name == null)
-                {
-                    name = mapName;
-                    if (streetName != null) name += " - " + streetName;
-                }
-
-                if (name != null)
-                    parentNode.Text += ": " + name;
-
-                if (id != null)
-                    parentNode.Text += " (id: " + id + ")";
-                if (type != null)
-                    parentNode.Text += " (type: " + type + ")";
-
-            }
-            else if (obj is WzList list)
-            {
-                parentNode.ToolTipText = obj.ToString();
-                for (var i = 0; i < list.ChildCount; i++)
-                {
-                    var name = i.ToString();
-                    var elem = list[name];
-                    var subNode = parentNode.Nodes.Add(name, name);
-                    subNode.Tag = elem;
-
-                    if (recursive)
-                        BuildTreeFromData(subNode, elem, recursive);
-                    else
-                        FinalTryBeforeDummyNode(subNode, elem);
-
-                }
-            }
-            else if (obj is WzVector2D vector)
-            {
-                parentNode.ToolTipText = "Vector2D";
-                foreach (var name in new string[] { "X", "Y" })
-                {
-                    var subNode = parentNode.Nodes.Add(name, name);
-                    subNode.Tag = vector[name];
-                    subNode.ToolTipText = subNode.Tag.ToString();
-                }
-            }
-            else if (obj is WzUOL uol)
-            {
-                object curObject = uol;
-                bool firstIter = true;
-
-                parentNode.ToolTipText = "";
-                parentNode.Text += " (UOL: ";
-                bool invalid = false;
-                while (curObject is WzUOL uolObj)
-                {
-                    var actualObject = uolObj.ActualObject();
-                    parentNode.ToolTipText += "UOL: " + uolObj.Path + Environment.NewLine;
-                    parentNode.ToolTipText += "Actual Path: " + uolObj.ActualPath() + Environment.NewLine;
-                    parentNode.ToolTipText += "Actual Object: " + actualObject + Environment.NewLine;
-
-                    if (actualObject == null)
-                    {
-                        parentNode.ToolTipText += "!!! OBJECT DOESNT EXIST !!!" + Environment.NewLine;
-                        invalid = true;
-                    }
-
-                    if (!firstIter) parentNode.Text += " -> ";
-                    firstIter = false;
-                    parentNode.Text += uol.Path;
-
-                    curObject = actualObject;
-                }
-
-                parentNode.Text += ")";
-
-                if (invalid) parentNode.Text += " ERROR";
-            }
-            else
-            {
-                NameNonPcomObject(parentNode, obj);
-            }
-
-            var infoLinkNode = parentNode.Nodes["info"]?.Nodes["link"];
-            if (infoLinkNode != null)
-                parentNode.Text += " (link: " + infoLinkNode.Tag + ")";
-            deep--;
-        }
-
-
+        
         private void tvData_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             TryLoadNode(tvData.SelectedNode as WZTreeNode);
         }
 
-        private void TryLoadNode(WZTreeNode node)
+        public void TryLoadNode(WZTreeNode node)
         {
 
             if (node == null) return;
@@ -585,79 +456,15 @@ namespace MapleManager
             }
         }
 
+        
+
         private void tvData_BeforeExpand(object sender, TreeViewCancelEventArgs e)
         {
             TryLoadNode(e.Node as WZTreeNode);
         }
-
-
-        private IEnumerable<TreeNode> GetAllUnloadedNodes(TreeNode parent)
-        {
-            if (parent.Tag is NameSpaceFile)
-            {
-                if (parent.Nodes.Count == 0 ||
-                    parent.Nodes[0].Text != DummyNodeName)
-                    yield break;
-                yield return parent;
-                yield break;
-            }
-
-            //Trace.WriteLine(parent.FullPath);
-            foreach (TreeNode subNode in parent.Nodes)
-            {
-                foreach (var allUnloadedNode in GetAllUnloadedNodes(subNode))
-                {
-                    yield return allUnloadedNode;
-                }
-            }
-
-        }
-
+        
         private void uOLsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tvData.BeginUpdate();
-            var context = TaskScheduler.FromCurrentSynchronizationContext();
-            var tasks = new List<Task>();
-
-            var nodeReinserts = new TreeNode[tvData.Nodes.Count];
-
-
-            foreach (TreeNode tvDataNode in tvData.Nodes)
-            {
-                var idx = tvDataNode.Index;
-                nodeReinserts[idx] = tvDataNode;
-            }
-            tvData.Nodes.Clear();
-
-            foreach (var kvp in nodeReinserts)
-            {
-                var tvDataNode = kvp;
-
-                foreach (var node in GetAllUnloadedNodes(tvDataNode))
-                {
-                    tasks.Add(Task.Factory.StartNew(() =>
-                    {
-                        var tn = new TreeNode();
-                        tn.Tag = node.Tag;
-                        tn.Text = node.Text;
-                        tn.Name = node.Name;
-                        BuildTreeFromData(tn, (node.Tag as NameSpaceFile).Object);
-
-                        int index = node.Index;
-                        var parent = node.Parent;
-                        parent.Nodes[index] = tn;
-
-                    }));
-                }
-            }
-
-            Task.WaitAll(tasks.ToArray());
-            Trace.WriteLine($"All nodes loaded {tasks.Count}. Inserting");
-
-            tvData.Nodes.AddRange(nodeReinserts);
-
-            Trace.WriteLine($"Done!");
-            tvData.EndUpdate();
         }
         
         private void btnGoToUOL_Click(object sender, EventArgs e)

@@ -1,4 +1,6 @@
-﻿namespace MapleManager.WzTools
+﻿using MapleManager.Controls;
+
+namespace MapleManager.WzTools
 {
     class NameSpaceNode
     {
@@ -6,5 +8,7 @@
         public int Checksum { get; set; }
         public int Size { get; set; }
         public string Name { get; set; }
+
+        public WZTreeNode TreeNode { get; set; }
     }
 }
