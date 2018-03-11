@@ -40,7 +40,21 @@ namespace MapleManager
 
     public class ScriptNode : ScriptAPI
     {
+        // Use Object instead
         private object _obj;
+
+        private object Object
+        {
+            get
+            {
+                if (_obj is NameSpaceFile file)
+                {
+                    _obj = file.Object;
+                }
+                return _obj;
+            }
+        }
+
         public string Name { get; private set; }
         private ScriptNode _parent;
 
@@ -49,7 +63,7 @@ namespace MapleManager
             _obj = obj;
             _parent = parent;
         }
-
+        
         private ScriptNode LoadTreeNodeInfo(WZTreeNode node, string key)
         {
             var tnValue = node.Tag;
@@ -60,7 +74,7 @@ namespace MapleManager
                     obj = node;
                     break;
                 case NameSpaceFile file:
-                    obj = file.Object;
+                    obj = file;
                     break;
                 case NameSpaceDirectory dir:
                     obj = node;
@@ -73,7 +87,8 @@ namespace MapleManager
 
         public override WZTreeNode TryGetTreeNode()
         {
-            if (_obj is PcomObject po) return po.TreeNode;
+            if (_obj is NameSpaceFile nsf) return nsf.TreeNode;
+            if (Object is PcomObject po) return po.TreeNode;
             return null;
         }
 
@@ -81,7 +96,7 @@ namespace MapleManager
         {
             get
             {
-                switch (_obj)
+                switch (Object)
                 {
                     case PcomObject po:
                         var x = po.Get(key);
@@ -101,7 +116,7 @@ namespace MapleManager
                         return null;
                 }
                 
-                throw new Exception("??? Don't know how to handle this type (key: " + key + "): " + _obj);
+                throw new Exception("??? Don't know how to handle this type (key: " + key + "): " + Object);
             }
         }
 
@@ -122,7 +137,7 @@ namespace MapleManager
 
         public Int8 ToInt8()
         {
-            switch (_obj)
+            switch (Object)
             {
                 case Int8 __sb: return (Int8)__sb;
                 case Int16 _ss: return (Int8)_ss;
@@ -135,12 +150,12 @@ namespace MapleManager
                 case String __s: return Int8.Parse(__s);
             }
 
-            throw new Exception($"Not sure how to convert '{_obj}' into an Int8");
+            throw new Exception($"Not sure how to convert '{Object}' into an Int8");
         }
 
         public Int16 ToInt16()
         {
-            switch (_obj)
+            switch (Object)
             {
                 case Int8 __sb: return (Int16)__sb;
                 case Int16 _ss: return (Int16)_ss;
@@ -153,12 +168,12 @@ namespace MapleManager
                 case String __s: return Int16.Parse(__s);
             }
 
-            throw new Exception($"Not sure how to convert '{_obj}' into an Int16");
+            throw new Exception($"Not sure how to convert '{Object}' into an Int16");
         }
 
         public Int32 ToInt32()
         {
-            switch (_obj)
+            switch (Object)
             {
                 case Int8 __sb: return (Int32)__sb;
                 case Int16 _ss: return (Int32)_ss;
@@ -171,12 +186,12 @@ namespace MapleManager
                 case String __s: return Int32.Parse(__s);
             }
 
-            throw new Exception($"Not sure how to convert '{_obj}' into an Int32");
+            throw new Exception($"Not sure how to convert '{Object}' into an Int32");
         }
 
         public Int64 ToInt64()
         {
-            switch (_obj)
+            switch (Object)
             {
                 case Int8 __sb: return (Int64)__sb;
                 case Int16 _ss: return (Int64)_ss;
@@ -189,12 +204,12 @@ namespace MapleManager
                 case String __s: return Int64.Parse(__s);
             }
 
-            throw new Exception($"Not sure how to convert '{_obj}' into an Int64");
+            throw new Exception($"Not sure how to convert '{Object}' into an Int64");
         }
 
         public UInt8 ToUInt8()
         {
-            switch (_obj)
+            switch (Object)
             {
                 case Int8 __sb: return (UInt8)__sb;
                 case Int16 _ss: return (UInt8)_ss;
@@ -207,12 +222,12 @@ namespace MapleManager
                 case String __s: return UInt8.Parse(__s);
             }
 
-            throw new Exception($"Not sure how to convert '{_obj}' into an UInt8");
+            throw new Exception($"Not sure how to convert '{Object}' into an UInt8");
         }
 
         public UInt16 ToUInt16()
         {
-            switch (_obj)
+            switch (Object)
             {
                 case Int8 __sb: return (UInt16)__sb;
                 case Int16 _ss: return (UInt16)_ss;
@@ -225,12 +240,12 @@ namespace MapleManager
                 case String __s: return UInt16.Parse(__s);
             }
 
-            throw new Exception($"Not sure how to convert '{_obj}' into an UInt16");
+            throw new Exception($"Not sure how to convert '{Object}' into an UInt16");
         }
 
         public UInt32 ToUInt32()
         {
-            switch (_obj)
+            switch (Object)
             {
                 case Int8 __sb: return (UInt32)__sb;
                 case Int16 _ss: return (UInt32)_ss;
@@ -243,12 +258,12 @@ namespace MapleManager
                 case String __s: return UInt32.Parse(__s);
             }
 
-            throw new Exception($"Not sure how to convert '{_obj}' into an UInt32");
+            throw new Exception($"Not sure how to convert '{Object}' into an UInt32");
         }
 
         public UInt64 ToUInt64()
         {
-            switch (_obj)
+            switch (Object)
             {
                 case Int8 __sb: return (UInt64)__sb;
                 case Int16 _ss: return (UInt64)_ss;
@@ -261,12 +276,12 @@ namespace MapleManager
                 case String __s: return UInt64.Parse(__s);
             }
 
-            throw new Exception($"Not sure how to convert '{_obj}' into an UInt64");
+            throw new Exception($"Not sure how to convert '{Object}' into an UInt64");
         }
 
         public override string ToString()
         {
-            return _obj.ToString();
+            return Object.ToString();
         }
 
         private IEnumerable<ScriptNode> _enumerable = null;
@@ -279,7 +294,7 @@ namespace MapleManager
                 else
                 {
                     // Try to do it manually
-                    switch (_obj)
+                    switch (Object)
                     {
                         case WzProperty prop: return prop.HasMembers;
                         case TreeNode tn: return tn.Nodes.Count > 0;
@@ -293,7 +308,7 @@ namespace MapleManager
 
         private IEnumerable<ScriptNode> _getEnumerable()
         {
-            switch (_obj)
+            switch (Object)
             {
                 case WzProperty prop:
                     return prop.Select(x => new ScriptNode(x.Value, this) { Name = x.Key });

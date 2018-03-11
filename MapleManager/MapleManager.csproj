@@ -97,6 +97,7 @@
     <Compile Include="WzTools\Helpers\AlphaType.cs" />
     <Compile Include="WzTools\Helpers\CanvasColor.cs" />
     <Compile Include="WzTools\Helpers\DitherType.cs" />
+    <Compile Include="WzTools\Helpers\DXTDecoder.cs" />
     <Compile Include="WzTools\Helpers\LevelMap.cs" />
     <Compile Include="WzTools\Helpers\PixOperation.cs" />
     <Compile Include="WzTools\NameSpaceNode.cs" />

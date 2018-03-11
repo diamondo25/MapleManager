@@ -1,12 +1,15 @@
 ﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Media.Imaging;
 using MapleManager.Controls;
 using MapleManager.Scripts.Animator;
 using MapleManager.Validators;
@@ -28,18 +31,18 @@ namespace MapleManager
             {"Item", null},
             {"Map", null},
             {"Mob", null},
+            {"Morph", null},
             {"Npc", null},
+            {"Quest", null},
             {"Reactor", null},
             {"Skill", null},
             {"Sound", null},
             {"String", null},
+            {"TamingMob", null},
             {"UI", null},
         };
 
         private ScriptNode _mainScriptNode { get; }
-
-        private static Encoder GifEncoder;
-        private static ImageCodecInfo GifCodecInfo;
 
         public Form1()
         {
@@ -47,7 +50,7 @@ namespace MapleManager
             ResetTree();
 
             LoadContentsOfFolder(@"C:\Users\Erwin\Desktop\WzFiles\Data.wz");
-            
+
             _mainScriptNode = new ScriptNode(tvData, null);
 
         }
@@ -149,8 +152,8 @@ namespace MapleManager
             textBox1.Text += "Tag Type: " + tag?.GetType()?.Name + Environment.NewLine;
 
             textBox2.Text = textBox1.Text
-                .Replace("\\r", "\r")
-                .Replace("\\n", "\n")
+                .Replace("\\r", "")
+                .Replace("\\n", "\r\n")
                 .Replace("\\t", "\t");
 
             object workingObject = tag;
@@ -168,7 +171,7 @@ namespace MapleManager
             {
                 pbNodeImage.Image = null;
             }
-            
+
             if (e.Node.Tag is NameSpaceDirectory || e.Node.Tag is NameSpaceFile)
             {
                 tvData.ContextMenuStrip = cmsDirectory;
@@ -222,10 +225,9 @@ namespace MapleManager
                 node.Text = name;
                 node.Tag = kvp.Value;
                 kvp.Value.TreeNode = node;
-                parentNode.Nodes.Add(node);
+                node.SetNotLoaded();
 
-                node.ToolTipText = "-- Not loaded --";
-                node.Nodes.Add(DummyNodeName);
+                parentNode.Nodes.Add(node);
             }
         }
 
@@ -269,13 +271,14 @@ namespace MapleManager
             var ofd = new OpenFileDialog();
             ofd.FileName = @"C:\Program Files (x86)\MapleGlobalT_2 - kopie\Data.wz";
             ofd.Filter = "WZ Files|*.wz";
+            ofd.Multiselect = true;
 
             if (ofd.ShowDialog() != DialogResult.OK) return;
 
 
             var folderBrowserDialog = new FolderSelect.FolderSelectDialog();
             if (folderBrowserDialog.ShowDialog() == false) return;
-            ExtractWZFile(ofd.FileName, folderBrowserDialog.FileName);
+            ExtractWZFile(folderBrowserDialog.FileName, ofd.FileNames);
 
             LoadContentsOfFolder(folderBrowserDialog.FileName);
         }
@@ -300,36 +303,39 @@ namespace MapleManager
             var ofd = new OpenFileDialog();
             ofd.FileName = @"C:\Program Files (x86)\MapleGlobalT_2 - kopie\Data.wz";
             ofd.Filter = "WZ Files|*.wz";
+            ofd.Multiselect = true;
 
             if (ofd.ShowDialog() != DialogResult.OK) return;
 
             var folderBrowserDialog = new FolderSelect.FolderSelectDialog();
             if (folderBrowserDialog.ShowDialog() == false) return;
 
-            ExtractWZFile(ofd.FileName, folderBrowserDialog.FileName);
+            ExtractWZFile(folderBrowserDialog.FileName, ofd.FileNames);
         }
 
-        private WzPackage ExtractWZFile(string wzFile, string extractPath)
+        private void ExtractWZFile(string extractPath, params string[] wzFiles)
         {
             var key = Prompt("WZ Key?");
 
-            var fsp = new WzPackage(wzFile, key);
-
-            try
+            foreach (var wzFile in wzFiles)
             {
-                fsp.Process();
+                var fsp = new WzPackage(wzFile, key);
+
+                try
+                {
+                    fsp.Process();
+                }
+                catch (Exception ex)
+                {
+                    ErrorMessage($"Exception occurred while loading file: {ex}");
+                    return;
+                }
+
+
+                fsp.Extract(extractPath);
+
             }
-            catch (Exception ex)
-            {
-                ErrorMessage($"Exception occurred while loading file: {ex}");
-                return null;
-            }
-
-
-            fsp.Extract(extractPath);
-
             InfoMessage("Done extracting!");
-            return fsp;
         }
 
         private bool LoadScript(out IScript scriptInterface, params string[] filenames)
@@ -359,6 +365,7 @@ namespace MapleManager
             scriptInterface = null;
             return false;
         }
+
         private void RecompileScriptItem(object sender, EventArgs eventArgs)
         {
             var mi = sender as ToolStripMenuItem;
@@ -387,6 +394,9 @@ namespace MapleManager
 
             if (pmi.Tag is IScript script)
             {
+#if DEBUG
+                script.Start(_mainScriptNode);
+#else
                 try
                 {
                     script.Start(_mainScriptNode);
@@ -395,6 +405,8 @@ namespace MapleManager
                 {
                     ErrorMessage($"Unable to run script.\r\n\r\n{ex}");
                 }
+#endif
+                EndTreeUpdate();
             }
             Trace.WriteLine("hurr");
         }
@@ -416,14 +428,6 @@ namespace MapleManager
 
         }
 
-
-        private bool HasDummyNode(TreeNode parentNode)
-        {
-            if (parentNode.Nodes.Count == 0) return false;
-            if (parentNode.Nodes[0].Text == DummyNodeName) return true;
-            return false;
-        }
-        
         private void tvData_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             TryLoadNode(tvData.SelectedNode as WZTreeNode);
@@ -431,42 +435,38 @@ namespace MapleManager
 
         public void TryLoadNode(WZTreeNode node)
         {
-
             if (node == null) return;
-            if (node.Tag is NameSpaceFile nsf)
+            try
             {
-                if (!HasDummyNode(node)) return;
-                Trace.WriteLine("Loading: " + node.FullPath);
-                node.Nodes.Clear();
-
-                try
-                {
-                    var obj = nsf.Object;
-
-                    tvData.BeginUpdate();
-                    node.WzObject = obj;
-                    node.UpdateData();
-                    tvData.EndUpdate();
-                }
-                catch (NotImplementedException ex)
-                {
-                    ErrorMessage($"Unable to load {node.Name}... {ex}");
-                }
-
+                // tvData.BeginUpdate();
+                node.TryLoad(false);
+                // tvData.EndUpdate();
+            }
+            catch (NotImplementedException ex)
+            {
+                ErrorMessage($"Unable to load {node.Name}... {ex}");
             }
         }
 
-        
+        public void BeginTreeUpdate()
+        {
+            tvData.BeginUpdate();
+        }
+
+        public void EndTreeUpdate()
+        {
+            tvData.EndUpdate();
+        }
 
         private void tvData_BeforeExpand(object sender, TreeViewCancelEventArgs e)
         {
             TryLoadNode(e.Node as WZTreeNode);
         }
-        
+
         private void uOLsToolStripMenuItem_Click(object sender, EventArgs e)
         {
         }
-        
+
         private void btnGoToUOL_Click(object sender, EventArgs e)
         {
             var node = tvData.SelectedNode;
@@ -506,10 +506,10 @@ namespace MapleManager
                     foreach (TreeNode subNode in tn.Nodes)
                     {
                         if (!(subNode is WZTreeNode wtn)) continue;
-                        
+
                         if (subNode.Tag is NameSpaceDirectory)
                             loadNodes(wtn);
-                        else if (subNode.Tag is NameSpaceFile && HasDummyNode(subNode))
+                        else if (subNode.Tag is NameSpaceFile && wtn.IsNotLoaded())
                             nodesToLoad.Add(wtn);
                     }
                 }
@@ -525,7 +525,7 @@ namespace MapleManager
                     var obj = nsf.Object;
                     node.WzObject = obj;
                     node.Nodes.Clear();
-                    
+
                     node.UpdateData();
                 }
                 tvData.EndUpdate();

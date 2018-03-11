@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using OpenVice.Dev;
 
 namespace MapleManager.WzTools.Objects
 {
@@ -21,6 +22,7 @@ namespace MapleManager.WzTools.Objects
             A8R8G8B8 = 2,
             R5G6B5 = 0x201,
             DXT3 = 0x402,
+            DXT5 = 0x802,
             UNKNOWN = 0
         }
 
@@ -43,7 +45,68 @@ namespace MapleManager.WzTools.Objects
         public int TileWidth => ((1 << MagLevel) + Width - 1) >> MagLevel;
         public int TileHeight => ((1 << MagLevel) + Height - 1) >> MagLevel;
 
-        public Image Tile { get; private set; }
+        private Image _tile;
+        private Image _linkedTile;
+
+        public Image Tile
+        {
+            get
+            {
+                if (Width == 1 && Height == 1)
+                {
+                    if (_linkedTile != null) return _linkedTile;
+                    if (HasKey("_outlink"))
+                    {
+                        // This one is absolute in whole data storage
+                        var uol = new WzUOL()
+                        {
+                            Path = (string)this["_outlink"],
+                            Parent = Parent,
+                            Name = Name,
+                            TreeNode = TreeNode,
+                            Absolute = true
+                        };
+                        _linkedTile = (uol.ActualObject() as WzImage)?.Tile;
+                        if (_linkedTile == null)
+                        {
+                            Console.WriteLine("Unable to load {0} image. Cur path: {1}", uol.Path, GetFullPath());
+                            _linkedTile = _tile;
+                        }
+
+                        return _linkedTile;
+                    }
+
+                    if (HasKey("_inlink"))
+                    {
+                        // This one is relative to this img
+                        PcomObject imgNode = this;
+                        while (!imgNode.Name.EndsWith(".img")) imgNode = imgNode.Parent;
+
+                        var uol = new WzUOL()
+                        {
+                            Path = (string)this["_inlink"],
+                            Parent = imgNode,
+                            Name = Name,
+                            TreeNode = TreeNode,
+                            Absolute = false
+                        };
+                        _linkedTile = (uol.ActualObject() as WzImage)?.Tile;
+                        if (_linkedTile == null)
+                        {
+                            Console.WriteLine("Unable to load {0} image. Cur path: {1}", uol.Path, GetFullPath());
+                            _linkedTile = _tile;
+                        }
+
+                        return _linkedTile;
+                    }
+                }
+                return _tile;
+            }
+            private set
+            {
+                _tile = value;
+            }
+        }
 
         // (1 << x) === Math.pow(2, x)
 
@@ -75,10 +138,13 @@ namespace MapleManager.WzTools.Objects
 
             PixFormat = (WzPixFormat)reader.ReadCompressedInt();
 
-            Debug.Assert(PixFormat != WzPixFormat.UNKNOWN);
-
-            // To quote Tony: it takes ages before this is actually used.
-            Debug.Assert(PixFormat != WzPixFormat.DXT3);
+            Debug.Assert(
+                PixFormat == WzPixFormat.A4R4G4B4 ||
+                PixFormat == WzPixFormat.A8R8G8B8 ||
+                PixFormat == WzPixFormat.R5G6B5 ||
+                PixFormat == WzPixFormat.DXT3 ||
+                PixFormat == WzPixFormat.DXT5
+            );
 
             MagLevel = reader.ReadCompressedInt();
             Debug.Assert(MagLevel >= 0);
@@ -120,18 +186,32 @@ namespace MapleManager.WzTools.Objects
                 Bitmap output = null;
 
                 byte[] arr;
-                if (PixFormat == WzPixFormat.A4R4G4B4) arr = ARGB16toARGB32(outputStream, uncompressedSize);
-                else arr = outputStream.ToArray();
+                switch (PixFormat)
+                {
+                    case WzPixFormat.A4R4G4B4:
+                        arr = ARGB16toARGB32(outputStream, uncompressedSize);
+                        break;
+                    case WzPixFormat.DXT5:
+                        arr = DXTDecoder.Decode(TileWidth, TileHeight, outputStream.ToArray(), DXTDecoder.CompressionType.DXT5);
+                        break;
+                    case WzPixFormat.DXT3:
+                        arr = DXTDecoder.Decode(TileWidth, TileHeight, outputStream.ToArray(), DXTDecoder.CompressionType.DXT3);
+                        break;
+                    default:
+                        arr = outputStream.ToArray();
+                        break;
+                }
 
 
                 PixelFormat format;
 
+                // TODO: Figure out why some images are not transparent
                 switch (PixFormat)
                 {
-                    case WzPixFormat.A4R4G4B4:
-                    case WzPixFormat.A8R8G8B8: format = PixelFormat.Format32bppArgb; break;
                     case WzPixFormat.R5G6B5: format = PixelFormat.Format16bppRgb565; break;
-                    default: throw new NotImplementedException();
+                    case WzPixFormat.A4R4G4B4:
+                    case WzPixFormat.A8R8G8B8:
+                    default: format = PixelFormat.Format32bppArgb; break;
                 }
 
                 output = new Bitmap(TileWidth, TileHeight, format);
@@ -149,7 +229,10 @@ namespace MapleManager.WzTools.Objects
 
                 output.UnlockBits(bmpData);
 
-                // output.Save(@"C:\Users\Erwin\Documents\visual studio 2017\Projects\MapleManager\" + PixFormat + ".png", ImageFormat.Png);
+                if (PixFormat == WzPixFormat.DXT3 || PixFormat == WzPixFormat.DXT5)
+                {
+                    //output.Save(@"C:\Users\Erwin\Documents\visual studio 2017\Projects\MapleManager\" + PixFormat + ".png", ImageFormat.Png);
+                }
                 Tile = output;
             }
 

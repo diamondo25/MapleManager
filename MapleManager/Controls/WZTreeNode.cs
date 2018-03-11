@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using MapleManager.WzTools.FileSystem;
 using MapleManager.WzTools.Objects;
 
 namespace MapleManager.Controls
@@ -11,7 +12,14 @@ namespace MapleManager.Controls
     public class WZTreeNode : TreeNode
     {
         public object WzObject { get; set; }
-        
+        public Dictionary<string, AdditionalInfoObject> AdditionalInfo { get; set; } = null;
+
+        public class AdditionalInfoObject
+        {
+            public string Name { get; set; }
+            public string Text { get; set; }
+            public bool ShowInText { get; set; }
+        }
 
         public WZTreeNode() : base() { }
 
@@ -42,13 +50,72 @@ namespace MapleManager.Controls
                 Nodes.Add(subNode);
         }
 
-        public void UpdateData()
+        public void SetAdditionalInfo(string key, string text, bool showInText, bool updateText = true)
+        {
+            if (AdditionalInfo == null) AdditionalInfo = new Dictionary<string, AdditionalInfoObject>();
+            AdditionalInfo[key] = new AdditionalInfoObject
+            {
+                Name = key,
+                Text = text,
+                ShowInText = showInText
+            };
+            if (updateText) UpdateText();
+        }
+
+        public void RemoveAdditionalInfo(string key, bool updateText = true)
+        {
+            if (AdditionalInfo == null) return;
+            if (!AdditionalInfo.ContainsKey(key)) return;
+            AdditionalInfo.Remove(key);
+            if (AdditionalInfo.Count == 0) AdditionalInfo = null;
+
+            if (updateText) UpdateText();
+        }
+
+
+        private const string DummyNodeName = "---DUMMYNODE---";
+
+        public void SetNotLoaded()
+        {
+            WzObject = null;
+            Nodes.Clear();
+            Nodes.Add(DummyNodeName, DummyNodeName);
+            SetNotLoadedTooltip();
+        }
+
+        public void SetNotLoadedTooltip()
+        {
+            ToolTipText = "-- not loaded --";
+        }
+
+        public bool IsNotLoaded()
+        {
+            if (Nodes.Count == 0) return false;
+            if (Nodes[0].Name == DummyNodeName) return true;
+            return false;
+        }
+
+        public void TryLoad(bool force)
+        {
+            if (!force && !IsNotLoaded()) return;
+            var nsf = Tag as FSFile;
+            var obj = nsf.Object;
+            WzObject = obj;
+            Nodes.Clear();
+
+            UpdateData();
+        }
+
+        public void UpdateText()
         {
             void SetString(object x, out string y)
             {
                 if (x is string g) y = g;
                 else y = null;
             }
+
+            ToolTipText = "";
+
 
             if (WzObject is PcomObject pcomObject)
             {
@@ -64,10 +131,6 @@ namespace MapleManager.Controls
                 if (pcomObject is WzProperty prop)
                 {
                     ToolTipText = "Property";
-                    foreach (var kvp in prop)
-                    {
-                        AddNode(kvp.Value, -1, kvp.Key);
-                    }
 
                     string mapName = null,
                         streetName = null,
@@ -108,21 +171,10 @@ namespace MapleManager.Controls
                 else if (pcomObject is WzVector2D vector)
                 {
                     ToolTipText = "Vector2D";
-                    foreach (var name in new string[] {"X", "Y"})
-                    {
-                        AddNode(vector[name], -1, name);
-                    }
                 }
                 else if (pcomObject is WzList list)
                 {
                     ToolTipText = pcomObject.ToString();
-                    for (var i = 0; i < list.ChildCount; i++)
-                    {
-                        var name = i.ToString();
-                        var elem = list[name];
-
-                        AddNode(elem, i, name);
-                    }
                 }
                 else if (pcomObject is WzUOL uol)
                 {
@@ -161,12 +213,84 @@ namespace MapleManager.Controls
 
                 var infoLinkNode = Nodes["info"]?.Nodes["link"] as WZTreeNode;
                 if (infoLinkNode != null)
-                    Text += " (link: " + infoLinkNode.WzObject + ")";
+                {
+                    SetAdditionalInfo("link", infoLinkNode.WzObject.ToString(), true, false);
+                }
+                else
+                {
+                    RemoveAdditionalInfo("link", false);
+                }
+            }
+            else if (WzObject != null)
+            {
+                ToolTipText = WzObject.ToString();
+            }
+            else if (IsNotLoaded())
+            {
+                SetNotLoadedTooltip();
             }
             else
             {
-                ToolTipText = WzObject?.ToString();
+                ToolTipText = "null";
             }
+
+            if (AdditionalInfo != null)
+            {
+                foreach (var o in AdditionalInfo)
+                {
+                    if (o.Value.ShowInText)
+                    {
+                        Text += " (" + o.Key + ": " + o.Value.Text + ")";
+                    }
+
+                    ToolTipText += Environment.NewLine;
+                    ToolTipText += o.Key + ": " + o.Value.Text;
+                }
+            }
+            ToolTipText = Text + Environment.NewLine + ToolTipText;
+        }
+
+        public void UpdateData()
+        {
+
+            if (WzObject is PcomObject pcomObject)
+            {
+                pcomObject.TreeNode = this;
+
+                var oldName = Name;
+                this.Name = pcomObject.Name;
+                //if (pcomObject.Parent != null && oldName != null)
+                //    pcomObject.Parent.Rename(oldName, Name);
+
+                Text = Name;
+
+                if (pcomObject is WzProperty prop)
+                {
+                    foreach (var kvp in prop)
+                    {
+                        AddNode(kvp.Value, -1, kvp.Key);
+                    }
+                }
+                else if (pcomObject is WzVector2D vector)
+                {
+                    foreach (var name in new string[] { "X", "Y" })
+                    {
+                        AddNode(vector[name], -1, name);
+                    }
+                }
+                else if (pcomObject is WzList list)
+                {
+                    for (var i = 0; i < list.ChildCount; i++)
+                    {
+                        var name = i.ToString();
+                        var elem = list[name];
+
+                        AddNode(elem, i, name);
+                    }
+                }
+            }
+
+            UpdateText();
         }
     }
 }

@@ -15,19 +15,22 @@ namespace MapleManager
 
         public static void CopyMultiFormatBitmapToClipboard(this Image img)
         {
-            using (MemoryStream msPNG = new MemoryStream())
-            using (MemoryStream msBMP = new MemoryStream())
-            using (MemoryStream msDIB = new MemoryStream())
+            using (var msPNG = new MemoryStream())
+            using (var msBMP = new MemoryStream())
+            using (var msDIB = new MemoryStream())
             {
                 IDataObject dataObject = new DataObject();
 
                 img.Save(msPNG, ImageFormat.Png);
                 dataObject.SetData("PNG", false, msPNG);
 
+                dataObject.SetData(DataFormats.Bitmap, true, msBMP);
+
                 img.Save(msBMP, ImageFormat.Bmp);
                 msBMP.Position = 14;
                 msBMP.CopyTo(msDIB);
                 dataObject.SetData(DataFormats.Dib, true, msDIB);
+
 
                 Clipboard.SetDataObject(dataObject, true, 20, 100);
             }

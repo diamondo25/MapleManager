@@ -138,6 +138,7 @@
             this.scDataTreeAndContent.Panel2.Paint += new System.Windows.Forms.PaintEventHandler(this.splitContainer1_Panel2_Paint);
             this.scDataTreeAndContent.Size = new System.Drawing.Size(878, 509);
             this.scDataTreeAndContent.SplitterDistance = 158;
+            this.scDataTreeAndContent.SplitterWidth = 10;
             this.scDataTreeAndContent.TabIndex = 0;
             // 
             // tvData
@@ -183,8 +184,8 @@
             // 
             this.scTextBoxes.Panel2.Controls.Add(this.textBox2);
             this.scTextBoxes.Panel2.Controls.Add(this.label2);
-            this.scTextBoxes.Size = new System.Drawing.Size(709, 214);
-            this.scTextBoxes.SplitterDistance = 354;
+            this.scTextBoxes.Size = new System.Drawing.Size(703, 214);
+            this.scTextBoxes.SplitterDistance = 351;
             this.scTextBoxes.TabIndex = 6;
             // 
             // textBox1
@@ -196,7 +197,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox1.Size = new System.Drawing.Size(348, 195);
+            this.textBox1.Size = new System.Drawing.Size(345, 195);
             this.textBox1.TabIndex = 0;
             // 
             // label1
@@ -217,7 +218,7 @@
             this.textBox2.Name = "textBox2";
             this.textBox2.ReadOnly = true;
             this.textBox2.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox2.Size = new System.Drawing.Size(345, 195);
+            this.textBox2.Size = new System.Drawing.Size(342, 195);
             this.textBox2.TabIndex = 1;
             // 
             // label2
@@ -239,7 +240,7 @@
             this.panel1.Controls.Add(this.pbNodeImage);
             this.panel1.Location = new System.Drawing.Point(2, 252);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(711, 254);
+            this.panel1.Size = new System.Drawing.Size(705, 254);
             this.panel1.TabIndex = 5;
             // 
             // pbNodeImage
@@ -247,7 +248,7 @@
             this.pbNodeImage.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pbNodeImage.Location = new System.Drawing.Point(0, 0);
             this.pbNodeImage.Name = "pbNodeImage";
-            this.pbNodeImage.Size = new System.Drawing.Size(711, 254);
+            this.pbNodeImage.Size = new System.Drawing.Size(705, 254);
             this.pbNodeImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pbNodeImage.TabIndex = 0;
             this.pbNodeImage.TabStop = false;

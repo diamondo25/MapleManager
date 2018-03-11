@@ -130,8 +130,9 @@ namespace MapleManager.Scripts.Animator
                     frame.a0 = actualImage.HasKey("a0") ? actualImage.GetInt32("a0") : 255;
                     frame.a1 = actualImage.HasKey("a1") ? actualImage.GetInt32("a1") : 255;
 
-                    frame.Width = actualImage.Width;
-                    frame.Height = actualImage.Height;
+                    var tile = actualImage.Tile;
+                    frame.Width = tile.Width;
+                    frame.Height = tile.Height;
 
                     frames.Add(frame);
                 }

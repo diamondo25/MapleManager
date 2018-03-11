@@ -5,12 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MapleManager.Controls;
 
 namespace MapleManager.WzTools.Objects
 {
     public  class WzUOL : PcomObject
     {
         public string Path { get; set; }
+        public bool Absolute { get; set; } = false;
 
         public override void Init(BinaryReader reader)
         {
@@ -45,12 +47,107 @@ namespace MapleManager.WzTools.Objects
         {
             // Go backwards
             var elements = Path.Split('/');
-            PcomObject curNode = this.Parent;
+            object curNode = this.Parent;
+
+            if (Absolute)
+            {
+                if (this.TreeNode != null)
+                {
+                    var firstElement = elements[0];
+                    elements = elements.Skip(1).ToArray();
+                    curNode = TreeNode.TreeView.Nodes[firstElement] as WZTreeNode;
+                }
+                else
+                {
+                    // Lets go all the way back...
+                    while (true)
+                    {
+                        var lastNonNullNode = curNode;
+                        if (curNode is WZTreeNode wztn)
+                            curNode = wztn.Parent;
+                        else if (curNode is PcomObject po)
+                        {
+                            curNode = po.Parent;
+                            if (po.Parent == null)
+                            {
+                                curNode = po.TreeNode?.Parent as WZTreeNode;
+                            }
+                        }
+                        else
+                            throw new NotImplementedException("Not sure how to handle this: " + curNode);
+
+                        if (curNode == null)
+                        {
+                            curNode = lastNonNullNode;
+                            break;
+                        }
+                    }
+                }
+            }
+
+
+
             foreach (var element in elements)
             {
-                if (element == "..") curNode = curNode.Parent;
-                else if (element == ".") continue;
-                else curNode = curNode.Get(element) as PcomObject;
+                if (element == ".") continue;
+                if (element == "..")
+                {
+                    if (curNode is WZTreeNode wztn)
+                        curNode = wztn.Parent;
+                    else if (curNode is PcomObject po)
+                    {
+                        curNode = po.Parent;
+                        if (po.Parent == null)
+                        {
+                            curNode = po.TreeNode?.Parent as WZTreeNode;
+                        }
+                    }
+                    else
+                        throw new NotImplementedException("Not sure how to handle this: " + curNode);
+                }
+                else
+                {
+                    bool retried = false;
+                    var tmp = curNode;
+                    // Saving this in a different far so i can change it
+                    var elemName = element;
+                    try_again:
+
+                    if (curNode is WZTreeNode wztn)
+                    {
+                        var tn = wztn.Nodes[elemName] as WZTreeNode;
+                        if (tn == null)
+                        {
+                            curNode = null;
+                        }
+                        else
+                        {
+                            tn.TryLoad(false);
+                            curNode = tn?.WzObject;
+                        }
+                        
+                    }
+                    else if (curNode is PcomObject po)
+                        curNode = po.Get(elemName);
+                    else
+                        throw new NotImplementedException("Not sure how to handle this: " + curNode);
+
+                    if (curNode == null)
+                    {
+                        if (retried) return null;
+
+                        if (tmp is WZTreeNode)
+                        {
+                            retried = true;
+                            curNode = tmp;
+
+                            elemName = element + ".img";
+                            goto try_again;
+                        }
+                        // Don't know what to try next.
+                        return null;
+                    }
+                }
             }
 
             if (recursiveResolve && curNode is WzUOL secondUol)

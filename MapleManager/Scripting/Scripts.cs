@@ -23,7 +23,7 @@ namespace MapleManager.Scripting
                 // Configure parameters
                 GenerateExecutable = false,
                 GenerateInMemory = true,
-                IncludeDebugInformation = false
+                IncludeDebugInformation = true,
             };
 
             var mainPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
