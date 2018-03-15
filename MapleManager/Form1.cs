@@ -333,7 +333,7 @@ namespace MapleManager
                 }
 
 
-                // fsp.Extract(extractPath);
+                fsp.Extract(extractPath);
 
             }
             InfoMessage("Done extracting!");
