@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MapleManager.WzTools.Helpers;
 
 namespace MapleManager.WzTools.Objects
 {
@@ -18,10 +19,16 @@ namespace MapleManager.WzTools.Objects
             set => Set(key, value);
         }
 
-        public override void Init(BinaryReader reader)
+        public override void Read(BinaryReader reader)
         {
             X = reader.ReadCompressedInt();
             Y = reader.ReadCompressedInt();
+        }
+
+        public override void Write(ArchiveWriter writer)
+        {
+            writer.WriteCompressedInt(X);
+            writer.WriteCompressedInt(Y);
         }
 
         public override void Set(string key, object value)

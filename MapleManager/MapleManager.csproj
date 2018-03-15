@@ -90,8 +90,9 @@
     <Compile Include="Scripts\TestScript.cs" />
     <Compile Include="Validators\MapValidator.cs" />
     <Compile Include="Validators\WzTreeView.cs" />
-    <Compile Include="WzTools\BinaryReaderWriterExtensions.cs" />
-    <Compile Include="WzTools\ExtraTools.cs" />
+    <Compile Include="WzTools\Helpers\ArchiveWriter.cs" />
+    <Compile Include="WzTools\Helpers\BinaryReaderWriterExtensions.cs" />
+    <Compile Include="WzTools\Helpers\ExtraTools.cs" />
     <Compile Include="WzTools\FileSystem\FSDirectory.cs" />
     <Compile Include="WzTools\FileSystem\FSFile.cs" />
     <Compile Include="WzTools\Helpers\AlphaType.cs" />

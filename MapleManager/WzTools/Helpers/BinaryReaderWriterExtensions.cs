@@ -14,11 +14,37 @@ namespace MapleManager.WzTools
             return x;
         }
 
+        public static void WriteCompressedInt(this BinaryWriter writer, int value)
+        {
+            if (value < -127 || value > 127)
+            {
+                writer.Write((sbyte)-128);
+                writer.Write((int)value);
+            }
+            else
+            {
+                writer.Write((sbyte)value);
+            }
+        }
+
         public static long ReadCompressedLong(this BinaryReader reader)
         {
             var x = reader.ReadSByte();
             if (x == -128) return reader.ReadInt64();
             return x;
+        }
+
+        public static void WriteCompressedLong(this BinaryWriter writer, long value)
+        {
+            if (value < -127 || value > 127)
+            {
+                writer.Write((sbyte)-128);
+                writer.Write(value);
+            }
+            else
+            {
+                writer.Write((sbyte)value);
+            }
         }
 
 
@@ -39,44 +65,38 @@ namespace MapleManager.WzTools
             return ret;
         }
 
-        public static string ReadString(this BinaryReader reader, byte id, byte existingID, byte newID, bool readByte,
-            int contentsStart = 0)
+        public static string ReadString(this BinaryReader reader, byte id, byte existingID, byte newID, int contentsStart = 0)
         {
-
             if (id == newID)
             {
-                return reader.ReadString(readByte);
+                return reader.DecodeString();
             }
             else if (id == existingID)
             {
-                return reader.ReadDeDuplicatedString(readByte, contentsStart);
+                return reader.ReadDeDuplicatedString(contentsStart);
             }
 
             throw new Exception($"Unknown ID. Expected {existingID} or {newID}, but got {id}.");
         }
-        public static string ReadString(this BinaryReader reader, byte existingID, byte newID, bool readByte, int contentsStart = 0)
+
+        public static string ReadString(this BinaryReader reader, byte existingID, byte newID, int contentsStart = 0)
         {
             var p = reader.ReadByte();
-            return reader.ReadString(p, existingID, newID, readByte, contentsStart);
+            return reader.ReadString(p, existingID, newID, contentsStart);
         }
 
-        private static string ReadDeDuplicatedString(this BinaryReader reader, bool readByte, int contentsStart = 0)
+        private static string ReadDeDuplicatedString(this BinaryReader reader, int contentsStart = 0)
         {
             var off = reader.ReadInt32();
 
             off += contentsStart;
 
-            return reader.JumpAndReturn(off, () => reader.ReadString(readByte));
+            return reader.JumpAndReturn(off, reader.DecodeString);
         }
 
 
-        private static string ReadString(this BinaryReader reader, bool readByte)
+        private static string DecodeString(this BinaryReader reader)
         {
-            if (readByte && reader.ReadByte() == 0)
-            {
-                return "";
-            }
-
             // unicode/ascii switch
             var len = reader.ReadSByte();
             if (len == 0) return "";
@@ -123,5 +143,6 @@ namespace MapleManager.WzTools
 
             return Encoding.Unicode.GetString(bytes.ToArray());
         }
+        
     }
 }

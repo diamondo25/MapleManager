@@ -6,18 +6,25 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MapleManager.Controls;
+using MapleManager.WzTools.Helpers;
 
 namespace MapleManager.WzTools.Objects
 {
-    public  class WzUOL : PcomObject
+    public class WzUOL : PcomObject
     {
         public string Path { get; set; }
         public bool Absolute { get; set; } = false;
 
-        public override void Init(BinaryReader reader)
+        public override void Read(BinaryReader reader)
         {
             Debug.Assert(reader.ReadByte() == 0);
-            Path = reader.ReadString(1, 0, false, 0);
+            Path = reader.ReadString(1, 0, 0);
+        }
+
+        public override void Write(ArchiveWriter writer)
+        {
+            writer.Write((byte)0);
+            writer.Write(Path, 1, 0);
         }
 
         public override void Set(string key, object value)

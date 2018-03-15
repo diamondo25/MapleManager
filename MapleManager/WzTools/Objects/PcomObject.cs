@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using MapleManager.Controls;
+using MapleManager.WzTools.Helpers;
 
 namespace MapleManager.WzTools.Objects
 {
@@ -15,7 +17,7 @@ namespace MapleManager.WzTools.Objects
         public PcomObject Parent = null;
         public WZTreeNode TreeNode = null;
         public string Name { get; set; }
-
+        
         public PcomObject this[string key]
         {
             get => Get(key) as PcomObject;
@@ -29,51 +31,56 @@ namespace MapleManager.WzTools.Objects
             if (t == '#')
             {
                 throw new NotImplementedException("ASCII file");
+                // TODO: Make WzProperty from ASCII file
             }
-            else
+
+            if (t == 'A')
             {
-                var type = reader.ReadString(t, 0x1B, 0x73, false);
-                switch (type)
-                {
-                    case "Property":
-                        var prop = new WzProperty();
-                        prop.Init(reader);
-                        return prop;
-                    case "List":
-                        var list = new WzList();
-                        list.Init(reader);
-                        return list;
-                    case "UOL":
-                        var uol = new WzUOL();
-                        uol.Init(reader);
-                        return uol;
-                    case "Shape2D#Vector2D":
-                        var vector = new WzVector2D();
-                        vector.Init(reader);
-                        return vector;
-                    case "Shape2D#Convex2D":
-                        var convex = new WzConvex2D();
-                        convex.Init(reader);
-                        return convex;
-
-                    case "Sound_DX8":
-                        return new LazyPcomObject<WzSound>(reader);
-
-
-                    case "Canvas":
-                        var image = new WzImage();
-                        image.Init(reader);
-                        return image;
-                    case "Canvas_":
-                        return new LazyPcomObject<WzImage>(reader);
-                }
+                return null;
             }
 
-            return null;
+            var type = reader.ReadString(t, 0x1B, 0x73, 0);
+            PcomObject obj;
+            switch (type)
+            {
+                case "Property": obj = new WzProperty(); break;
+                case "List": obj = new WzList(); break;
+                case "UOL": obj = new WzUOL(); break;
+                case "Shape2D#Vector2D": obj = new WzVector2D(); break;
+                case "Shape2D#Convex2D": obj = new WzConvex2D(); break;
+                case "Sound_DX8": obj = new LazyPcomObject<WzSound>(reader); break;
+                case "Canvas": obj = new WzImage(); break;
+                default:
+                    Console.WriteLine("Don't know how to read this proptype: {0}", type);
+                    return null;
+            }
+
+            obj.Read(reader);
+            return obj;
         }
 
-        public abstract void Init(BinaryReader reader);
-        
+        public static void WriteToBlob(ArchiveWriter writer, PcomObject obj)
+        {
+            void writeType(string type) => writer.Write(type, 0x1B, 0x73);
+            switch (obj)
+            {
+                case WzConvex2D x: writeType("Shape2D#Convex2D"); break;
+                case WzImage x: writeType("Canvas"); break;
+                case WzProperty x: writeType("Property"); break;
+                case WzList x: writeType("List"); break;
+                case WzUOL x: writeType("UOL"); break;
+                case WzVector2D x: writeType("Shape2D#Vector2D"); break;
+                case LazyPcomObject<WzSound> x: writeType("Sound_DX8"); break;
+                default: throw new NotImplementedException(obj.ToString());
+            }
+
+            obj.Write(writer);
+        }
+
+        public abstract void Read(BinaryReader reader);
+
+        public abstract void Write(ArchiveWriter writer);
+
         public abstract void Set(string key, object value);
         public abstract object Get(string key);
         public abstract void Rename(string key, string newName);

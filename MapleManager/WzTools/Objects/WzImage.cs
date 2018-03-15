@@ -116,7 +116,7 @@ namespace MapleManager.WzTools.Objects
         public int ExpectedDataSize => Pitch * (TileHeight /
                                                 ((PixFormat != WzPixFormat.DXT3 ? 0 : 3) + 1));
 
-        public override void Init(BinaryReader reader)
+        public override void Read(BinaryReader reader)
         {
             // dont care
             Debug.Assert(reader.ReadByte() == 0); // just zero
@@ -124,7 +124,7 @@ namespace MapleManager.WzTools.Objects
             if (reader.ReadByte() != 0)
             {
                 // Initialize prop
-                base.Init(reader);
+                base.Read(reader);
             }
             else
             {

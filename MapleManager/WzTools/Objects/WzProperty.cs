@@ -2,6 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using MapleManager.WzTools.Helpers;
+using Int8 = System.SByte;
+using UInt8 = System.Byte;
 
 namespace MapleManager.WzTools.Objects
 {
@@ -89,7 +92,7 @@ namespace MapleManager.WzTools.Objects
                    x is ulong ||
                    x is byte;
         }
-        
+
 
         public int GetInt32(string key) => (int)GetInt64(key);
         public short GetInt16(string key) => (short)GetInt64(key);
@@ -103,22 +106,8 @@ namespace MapleManager.WzTools.Objects
 
         public bool HasKey(string key) => _objects.ContainsKey(key);
 
-        public override void Init(BinaryReader reader)
+        public override void Read(BinaryReader reader)
         {
-           object ReadCompressedInt()
-            {
-                var x = reader.ReadSByte();
-                if (x == -128) return reader.ReadInt32();
-                return x;
-            }
-
-           object ReadCompressedLong()
-            {
-                var x = reader.ReadSByte();
-                if (x == -128) return reader.ReadInt64();
-                return x;
-            }
-
             if (reader.ReadByte() != 0)
             {
                 throw new NotImplementedException("No support for ASCII");
@@ -130,7 +119,7 @@ namespace MapleManager.WzTools.Objects
                 _objects = new Dictionary<string, object>(amount);
                 for (var i = 0; i < amount; i++)
                 {
-                    var name = reader.ReadString(1, 0, false, 0);
+                    var name = reader.ReadString(1, 0, 0);
                     var type = (WzVariantType)reader.ReadByte();
 
                     if (type == WzVariantType.DispatchVariant)
@@ -148,8 +137,8 @@ namespace MapleManager.WzTools.Objects
                         case WzVariantType.Int16Variant: obj = reader.ReadInt16(); break;
                         case WzVariantType.BoolVariant: obj = reader.ReadInt16() == 0; break;
 
-                        case WzVariantType.Uint32Variant: obj = ReadCompressedInt(); break;
-                        case WzVariantType.Int32Variant: obj = ReadCompressedInt(); break;
+                        case WzVariantType.Uint32Variant: obj = reader.ReadCompressedInt(); break;
+                        case WzVariantType.Int32Variant: obj = reader.ReadCompressedInt(); break;
 
                         case WzVariantType.Float32Variant:
                             if (reader.ReadByte() == 0x80) obj = reader.ReadSingle();
@@ -161,15 +150,15 @@ namespace MapleManager.WzTools.Objects
                             break;
 
                         case WzVariantType.BStrVariant:
-                            obj = reader.ReadString(1, 0, false, 0);
+                            obj = reader.ReadString(1, 0, 0);
                             break;
 
                         case WzVariantType.DateVariant: obj = DateTime.FromFileTime(reader.ReadInt64()); break;
 
                         // Currency (CY)
-                        case WzVariantType.CYVariant: obj = ReadCompressedLong(); break;
-                        case WzVariantType.Int64Variant: obj = ReadCompressedLong(); break;
-                        case WzVariantType.Uint64Variant: obj = ReadCompressedLong(); break;
+                        case WzVariantType.CYVariant: obj = reader.ReadCompressedLong(); break;
+                        case WzVariantType.Int64Variant: obj = reader.ReadCompressedLong(); break;
+                        case WzVariantType.Uint64Variant: obj = reader.ReadCompressedLong(); break;
 
                         case WzVariantType.UnknownVariant:
                             // blob
@@ -195,6 +184,104 @@ namespace MapleManager.WzTools.Objects
 
                     _objects[name] = obj;
                 }
+            }
+        }
+
+        public static void WriteObj(ArchiveWriter writer, object obj)
+        {
+            void writeVariant(WzVariantType vt) => writer.Write((byte)vt);
+
+            switch (obj)
+            {
+                case null: writeVariant(WzVariantType.EmptyVariant); break;
+                case bool x:
+                    writeVariant(WzVariantType.BoolVariant);
+                    writer.Write((short)(x ? 1 : 0));
+                    break;
+
+                case UInt8 x:
+                    writeVariant(WzVariantType.Uint8Variant);
+                    writer.Write(x);
+                    break;
+                case Int8 x:
+                    writeVariant(WzVariantType.Int8Variant);
+                    writer.Write(x);
+                    break;
+
+                case UInt16 x:
+                    writeVariant(WzVariantType.Uint16Variant);
+                    writer.Write(x);
+                    break;
+                case Int16 x:
+                    writeVariant(WzVariantType.Int16Variant);
+                    writer.Write(x);
+                    break;
+
+                case UInt32 x:
+                    writeVariant(WzVariantType.Uint32Variant);
+                    writer.WriteCompressedInt((int)x);
+                    break;
+                case Int32 x:
+                    writeVariant(WzVariantType.Int32Variant);
+                    writer.WriteCompressedInt((int)x);
+                    break;
+
+                case Single x:
+                    writeVariant(WzVariantType.Float32Variant);
+                    if (Math.Abs(x) > 0.0)
+                    {
+                        writer.Write((byte)0x80);
+                        writer.Write(x);
+                    }
+                    else writer.Write((byte)0);
+                    break;
+                case string x:
+                    writeVariant(WzVariantType.BStrVariant);
+                    writer.Write(x, 1, 0);
+                    break;
+
+                case DateTime x:
+                    writeVariant(WzVariantType.DateVariant);
+                    writer.Write((long)x.ToFileTime());
+                    break;
+
+                // CYVariant is not handled
+                case Int64 x:
+                    writeVariant(WzVariantType.Int64Variant);
+                    writer.WriteCompressedLong(x);
+                    break;
+                case UInt64 x:
+                    writeVariant(WzVariantType.Uint64Variant);
+                    writer.WriteCompressedLong((long)x);
+                    break;
+
+                case PcomObject po:
+                    writeVariant(WzVariantType.UnknownVariant);
+                    writer.Write((int)0);
+                    var tmp = writer.BaseStream.Position;
+
+                    WriteToBlob(writer, po);
+
+                    var cur = writer.BaseStream.Position;
+                    writer.BaseStream.Position = tmp - 4;
+                    writer.Write((int)(cur - tmp));
+                    writer.BaseStream.Position = cur;
+
+                    break;
+            }
+        }
+
+        public override void Write(ArchiveWriter writer)
+        {
+            writer.Write((byte)0); // ASCII
+            writer.Write((byte)0);
+
+            writer.WriteCompressedInt(_objects.Count);
+
+            foreach (var o in _objects)
+            {
+                writer.Write(o.Key, 1, 0);
+                WriteObj(writer, o.Value);
             }
         }
 

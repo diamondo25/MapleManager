@@ -10,7 +10,7 @@ namespace MapleManager.WzTools.Objects
     public class WzConvex2D : WzList
     {
 
-        public override void Init(BinaryReader reader)
+        public override void Read(BinaryReader reader)
         {
             var childCount = reader.ReadCompressedInt();
             var data = new object[childCount];

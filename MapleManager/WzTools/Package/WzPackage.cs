@@ -22,7 +22,7 @@ namespace MapleManager.WzTools.Package
         {
             Selftest();
 
-
+            // TODO: Ignore Offset field and just load it sequentually (doesnt require the key)
             PackagePath = packagePath;
             PackageKey = packageKey;
             CalculateOffset = DecodeOffset;
@@ -164,7 +164,7 @@ namespace MapleManager.WzTools.Package
 
 
                 Debug.Assert(node.OffsetInFile <= Reader.BaseStream.Length, "Offset out of file bounds");
-
+                
                 currentDirectory.Add(node);
             }
 

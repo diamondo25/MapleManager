@@ -5,17 +5,18 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MapleManager.WzTools.Helpers;
 
 namespace MapleManager.WzTools.Objects
 {
-    public class WzList : PcomObject, IEnumerable<object>
+    public class WzList : PcomObject, IEnumerable<PcomObject>
     {
         protected object _obj = null;
         public int ChildCount { get; private set; }
         public bool IsArray { get; private set; }
 
 
-        public override void Init(BinaryReader reader)
+        public override void Read(BinaryReader reader)
         {
             if (reader.ReadByte() != 0)
             {
@@ -26,7 +27,7 @@ namespace MapleManager.WzTools.Objects
             IsArray = isArray;
             var childCount = reader.ReadCompressedInt();
             ChildCount = childCount;
-            var data = new object[childCount];
+            var data = new PcomObject[childCount];
 
             for (int i = 0; i < childCount; i++)
             {
@@ -38,12 +39,26 @@ namespace MapleManager.WzTools.Objects
             else _obj = data.ToList();
         }
 
+        public override void Write(ArchiveWriter writer)
+        {
+            writer.Write((byte)0);
+            writer.Write((byte)(IsArray ? 1 : 0));
+            writer.WriteCompressedInt(ChildCount);
+
+            foreach (var o in this)
+            {
+                WriteToBlob(writer, o);
+            }
+        }
+
         public override void Set(string key, object value)
         {
+            if (!(value is PcomObject obj)) throw new InvalidDataException();
+
             if (int.TryParse(key, out var x))
             {
-                if (_obj is object[] arr) arr[x] = value;
-                else if (_obj is List<object> list) list[x] = value;
+                if (_obj is PcomObject[] arr) arr[x] = obj;
+                else if (_obj is List<PcomObject> list) list[x] = obj;
                 else throw new InvalidDataException();
             }
             else
@@ -56,8 +71,8 @@ namespace MapleManager.WzTools.Objects
         {
             if (int.TryParse(key, out var x))
             {
-                if (_obj is object[] arr) return arr[x];
-                else if (_obj is List<object> list) return list[x];
+                if (_obj is PcomObject[] arr) return arr[x];
+                else if (_obj is List<PcomObject> list) return list[x];
                 else throw new InvalidDataException();
             }
             else
@@ -72,17 +87,17 @@ namespace MapleManager.WzTools.Objects
         }
 
 
-        public IEnumerator<object> GetEnumerator()
+        public IEnumerator<PcomObject> GetEnumerator()
         {
-            if (_obj is object[] arr) return arr.GetEnumerator() as IEnumerator<object>;
-            else if (_obj is List<object> list) return list.GetEnumerator();
+            if (_obj is PcomObject[] arr) return arr.GetEnumerator() as IEnumerator<PcomObject>;
+            else if (_obj is List<PcomObject> list) return list.GetEnumerator();
             else throw new InvalidDataException();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            if (_obj is object[] arr) return arr.GetEnumerator();
-            else if (_obj is List<object> list) return list.GetEnumerator();
+            if (_obj is PcomObject[] arr) return arr.GetEnumerator();
+            else if (_obj is List<PcomObject> list) return list.GetEnumerator();
             else throw new InvalidDataException();
         }
     }

@@ -1,5 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using MapleManager.WzTools.Helpers;
 using MapleManager.WzTools.Objects;
+using Microsoft.VisualBasic;
 
 namespace MapleManager.WzTools
 {
@@ -29,6 +32,12 @@ namespace MapleManager.WzTools
                     {
                         _obj.Name = Name;
                         _obj.TreeNode = TreeNode;
+
+                        using (var fw = File.OpenWrite(Path.Combine(Environment.CurrentDirectory, "output.img")))
+                        using (var aw = new ArchiveWriter(fw))
+                        {
+                            PcomObject.WriteToBlob(aw, _obj);
+                        }
                     }
                 }
                 return _obj;

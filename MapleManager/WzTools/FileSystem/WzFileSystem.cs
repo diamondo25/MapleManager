@@ -20,8 +20,9 @@ namespace MapleManager.WzTools.FileSystem
                 node.Name = name;
                 node.OffsetInFile = -1;
                 node.RealPath = folder.FullName;
-                parentNode.Add(node);
                 LoadDirectories(node, kvp.Value);
+
+                parentNode.Add(node);
             }
 
             LoadFiles(parentNode, folder);

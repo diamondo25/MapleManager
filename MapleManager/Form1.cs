@@ -236,7 +236,9 @@ namespace MapleManager
             if (!Directory.Exists(folder)) return;
             var fs = new WzFileSystem();
             fs.Init(folder);
+            BeginTreeUpdate();
             LoadContentsSmart(fs);
+            EndTreeUpdate();
         }
 
         private void LoadContentsSmart(WzNameSpace ns)
@@ -244,8 +246,7 @@ namespace MapleManager
             // Load in current structure
             foreach (var kvp in Root)
             {
-                var existingDir = ns.SubDirectories.Find(x => x.Name == kvp.Key);
-                if (existingDir != null)
+                foreach (var existingDir in ns.SubDirectories.FindAll(x => x.Name.StartsWith(kvp.Key)))
                 {
                     InsertDirectories(kvp.Value, existingDir);
                 }
@@ -332,7 +333,7 @@ namespace MapleManager
                 }
 
 
-                fsp.Extract(extractPath);
+                // fsp.Extract(extractPath);
 
             }
             InfoMessage("Done extracting!");

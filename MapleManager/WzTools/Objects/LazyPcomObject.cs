@@ -5,6 +5,7 @@ using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MapleManager.WzTools.Helpers;
 
 namespace MapleManager.WzTools.Objects
 {
@@ -21,16 +22,22 @@ namespace MapleManager.WzTools.Objects
             OffsetInFile = (int)reader.BaseStream.Length;
         }
 
-        public override void Init(BinaryReader reader)
+        public override void Read(BinaryReader reader)
         {
-            throw new NotImplementedException();
+            
+        }
+
+        public override void Write(ArchiveWriter writer)
+        {
+            TryLoad();
+            _actualObject.Write(writer);
         }
 
         private void TryLoad()
         {
             if (Loaded) return;
             _actualObject = new T();
-            lazyReader.JumpAndReturn(OffsetInFile, () => _actualObject.Init(lazyReader));
+            lazyReader.JumpAndReturn(OffsetInFile, () => _actualObject.Read(lazyReader));
             lazyReader = null;
             Loaded = true;
         }
