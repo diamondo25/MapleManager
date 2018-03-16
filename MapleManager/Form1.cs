@@ -1,18 +1,13 @@
 ﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Diagnostics;
-using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Media.Imaging;
 using MapleManager.Controls;
 using MapleManager.Scripts.Animator;
-using MapleManager.Validators;
 using MapleManager.WzTools;
 using MapleManager.WzTools.FileSystem;
 using MapleManager.WzTools.Objects;
@@ -140,10 +135,14 @@ namespace MapleManager
             if (e.Node == null) return;
             if (!(e.Node is WZTreeNode wtn)) return;
             var tag = wtn.WzObject;
-
             tsslPath.Text = e.Node.FullPath;
 
+
+            BeginTreeUpdate();
+
             TryLoadNode(tvData.SelectedNode as WZTreeNode);
+            EndTreeUpdate();
+
             textBox1.Text = wtn.Text + Environment.NewLine;
             textBox1.Text += wtn.ToolTipText + Environment.NewLine;
             textBox1.Text += Environment.NewLine;
@@ -431,7 +430,9 @@ namespace MapleManager
 
         private void tvData_MouseDoubleClick(object sender, MouseEventArgs e)
         {
+            BeginTreeUpdate();
             TryLoadNode(tvData.SelectedNode as WZTreeNode);
+            EndTreeUpdate();
         }
 
         public void TryLoadNode(WZTreeNode node)

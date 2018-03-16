@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Windows.Forms;
 using MapleManager.Controls;
 using MapleManager.WzTools.Objects;
@@ -39,129 +38,138 @@ namespace MapleManager.Scripts.Animator
             }
             if (e.Node == null) return;
             if (!(e.Node is WZTreeNode)) return;
-            var wtn = (WZTreeNode)e.Node;
-            var tag = wtn.WzObject;
 
-            if (tag is WzProperty && wtn.Name.EndsWith(".img"))
+            try
             {
-                var prop = (WzProperty) tag;
-                
-                try_get_anim:
-                if (prop.HasKey("move")) tag = prop["move"];
-                else if (prop.HasKey("fly")) tag = prop["fly"];
-                else if (prop.HasKey("die")) tag = prop["die"];
-                else if (prop.HasKey("stand")) tag = prop["stand"];
-                else
-                {
-                    if (prop.HasKey("info") && prop["info"] is WzProperty)
-                    {
-                        prop = (WzProperty) prop["info"];
-                        if (prop.HasKey("link"))
-                        {
-                            var actualInfo = e.Node.Parent.Nodes[(string) prop["link"] + ".img"];
-                            if (actualInfo is WZTreeNode)
-                            {
-                                wtn = (actualInfo as WZTreeNode);
-                                Program.MainForm.TryLoadNode(wtn);
-                                prop = (WzProperty)wtn.WzObject;
-                                goto try_get_anim;
+                Program.MainForm.BeginTreeUpdate();
 
+                var wtn = (WZTreeNode) e.Node;
+                var tag = wtn.WzObject;
+
+                if (tag is WzProperty && wtn.Name.EndsWith(".img"))
+                {
+                    var prop = (WzProperty) tag;
+
+                    try_get_anim:
+                    if (prop.HasKey("move")) tag = prop["move"];
+                    else if (prop.HasKey("fly")) tag = prop["fly"];
+                    else if (prop.HasKey("die")) tag = prop["die"];
+                    else if (prop.HasKey("stand")) tag = prop["stand"];
+                    else
+                    {
+                        if (prop.HasKey("info") && prop["info"] is WzProperty)
+                        {
+                            prop = (WzProperty) prop["info"];
+                            if (prop.HasKey("link"))
+                            {
+                                var actualInfo = e.Node.Parent.Nodes[(string) prop["link"] + ".img"];
+                                if (actualInfo is WZTreeNode)
+                                {
+                                    wtn = (actualInfo as WZTreeNode);
+                                    Program.MainForm.TryLoadNode(wtn);
+                                    prop = (WzProperty) wtn.WzObject;
+                                    goto try_get_anim;
+
+                                }
                             }
                         }
+                        return;
                     }
-                    return;
                 }
-            }
 
-            object workingObject = tag;
-            if (workingObject is WzUOL)
-            {
-                var uol = (WzUOL)workingObject;
-                workingObject = uol.ActualObject();
-            }
-
-
-
-            // Magic code for animation
-            if (workingObject is WzProperty)
-            {
-                var prop = (WzProperty)workingObject;
-
-                bool indexesAreImageOrUOL = true;
-                bool foundAny = false;
-                var frames = new List<FrameInfo>();
-                for (var i = 0; ; i++)
+                object workingObject = tag;
+                if (workingObject is WzUOL)
                 {
-                    var p = prop[i.ToString()];
-                    if (p == null) break;
-                    foundAny = true;
-                    if (!(p is WzImage || p is WzUOL))
+                    var uol = (WzUOL) workingObject;
+                    workingObject = uol.ActualObject();
+                }
+
+
+
+                // Magic code for animation
+                if (workingObject is WzProperty)
+                {
+                    var prop = (WzProperty) workingObject;
+
+                    bool indexesAreImageOrUOL = true;
+                    bool foundAny = false;
+                    var frames = new List<FrameInfo>();
+                    for (var i = 0;; i++)
                     {
-                        indexesAreImageOrUOL = false;
-                        break;
-                    }
-
-                    var frame = new FrameInfo();
-
-                    WzImage actualImage;
-
-                    if (p is WzImage) actualImage = (WzImage)p;
-                    else if (p is WzUOL)
-                    {
-                        var ao = ((WzUOL)p).ActualObject(true);
-                        if (ao is WzImage)
+                        var p = prop[i.ToString()];
+                        if (p == null) break;
+                        foundAny = true;
+                        if (!(p is WzImage || p is WzUOL))
                         {
-                            actualImage = (WzImage) ao;
+                            indexesAreImageOrUOL = false;
+                            break;
+                        }
+
+                        var frame = new FrameInfo();
+
+                        WzImage actualImage;
+
+                        if (p is WzImage) actualImage = (WzImage) p;
+                        else if (p is WzUOL)
+                        {
+                            var ao = ((WzUOL) p).ActualObject(true);
+                            if (ao is WzImage)
+                            {
+                                actualImage = (WzImage) ao;
+                            }
+                            else continue;
                         }
                         else continue;
-                    }
-                    else continue;
-                    
-                    frame.Image = actualImage;
 
-                    var originProp = actualImage["origin"] as WzVector2D;
-                    if (originProp != null)
-                    {
-                        frame.X = originProp.X;
-                        frame.Y = originProp.Y;
-                    }
+                        frame.Image = actualImage;
 
-                    frame.delay = actualImage.HasKey("delay") ? actualImage.GetInt32("delay") : 100;
-                    frame.a0 = actualImage.HasKey("a0") ? actualImage.GetInt32("a0") : 255;
-                    frame.a1 = actualImage.HasKey("a1") ? actualImage.GetInt32("a1") : 255;
-
-                    var tile = actualImage.Tile;
-                    frame.Width = tile.Width;
-                    frame.Height = tile.Height;
-
-                    frames.Add(frame);
-                }
-
-                if (foundAny && indexesAreImageOrUOL)
-                {
-                    if (prop.HasKey("zigzag") && prop.GetInt32("zigzag") == 1)
-                    {
-                        if (frames.Count > 2)
+                        var originProp = actualImage["origin"] as WzVector2D;
+                        if (originProp != null)
                         {
-                            // Zigzag
-                            var tmp = new List<FrameInfo>(frames);
-                            tmp.RemoveAt(0);
-                            tmp.RemoveAt(tmp.Count - 1);
-                            tmp.Reverse();
-                            frames.AddRange(tmp);
+                            frame.X = originProp.X;
+                            frame.Y = originProp.Y;
                         }
+
+                        frame.delay = actualImage.HasKey("delay") ? actualImage.GetInt32("delay") : 100;
+                        frame.a0 = actualImage.HasKey("a0") ? actualImage.GetInt32("a0") : 255;
+                        frame.a1 = actualImage.HasKey("a1") ? actualImage.GetInt32("a1") : 255;
+
+                        var tile = actualImage.Tile;
+                        frame.Width = tile.Width;
+                        frame.Height = tile.Height;
+
+                        frames.Add(frame);
                     }
 
-                    Trace.WriteLine("FRAMES");
-                    
-                    if (frames.Count > 0)
+                    if (foundAny && indexesAreImageOrUOL)
                     {
-                        form.LoadFrames(frames);
-                    }
+                        if (prop.HasKey("zigzag") && prop.GetInt32("zigzag") == 1)
+                        {
+                            if (frames.Count > 2)
+                            {
+                                // Zigzag
+                                var tmp = new List<FrameInfo>(frames);
+                                tmp.RemoveAt(0);
+                                tmp.RemoveAt(tmp.Count - 1);
+                                tmp.Reverse();
+                                frames.AddRange(tmp);
+                            }
+                        }
 
+                        Trace.WriteLine("FRAMES");
+
+                        if (frames.Count > 0)
+                        {
+                            form.LoadFrames(frames);
+                        }
+
+                    }
                 }
             }
-
+            finally
+            {
+                Program.MainForm.EndTreeUpdate();
+            }
         }
 
     }
