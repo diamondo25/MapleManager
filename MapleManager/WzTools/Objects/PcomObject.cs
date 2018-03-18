@@ -10,7 +10,9 @@ namespace MapleManager.WzTools.Objects
         public PcomObject Parent = null;
         public WZTreeNode TreeNode = null;
         public string Name { get; set; }
-        
+
+        public int BlobSize { get; set; }
+
         public PcomObject this[string key]
         {
             get => Get(key) as PcomObject;
@@ -18,13 +20,15 @@ namespace MapleManager.WzTools.Objects
         }
 
 
-        public static PcomObject LoadFromBlob(BinaryReader reader, int blobSize = 0)
+        public static PcomObject LoadFromBlob(BinaryReader reader, int blobSize = 0, string name = null)
         {
+            var start = reader.BaseStream.Position;
             var t = reader.ReadByte();
             if (t == '#')
             {
-                throw new NotImplementedException("ASCII file");
+                //throw new NotImplementedException("ASCII file");
                 // TODO: Make WzProperty from ASCII file
+                return null;
             }
 
             if (t == 'A')
@@ -41,13 +45,15 @@ namespace MapleManager.WzTools.Objects
                 case "UOL": obj = new WzUOL(); break;
                 case "Shape2D#Vector2D": obj = new WzVector2D(); break;
                 case "Shape2D#Convex2D": obj = new WzConvex2D(); break;
-                case "Sound_DX8": obj = new LazyPcomObject<WzSound>(reader); break;
+                case "Sound_DX8": obj = new WzSound(); break;
                 case "Canvas": obj = new WzImage(); break;
                 default:
                     Console.WriteLine("Don't know how to read this proptype: {0}", type);
                     return null;
             }
 
+            obj.BlobSize = blobSize - (int)(reader.BaseStream.Position - start);
+            obj.Name = name;
             obj.Read(reader);
             return obj;
         }
@@ -63,7 +69,7 @@ namespace MapleManager.WzTools.Objects
                 case WzList x: writeType("List"); break;
                 case WzUOL x: writeType("UOL"); break;
                 case WzVector2D x: writeType("Shape2D#Vector2D"); break;
-                case LazyPcomObject<WzSound> x: writeType("Sound_DX8"); break;
+                case WzSound x: writeType("Sound_DX8"); break;
                 default: throw new NotImplementedException(obj.ToString());
             }
 

@@ -6,14 +6,15 @@ namespace MapleManager.WzTools.Objects
 {
     public class WzSound : PcomObject
     {
+        public byte[] Blob = null;
         public override void Read(BinaryReader reader)
         {
-            // dont care
+            Blob = reader.ReadBytes(BlobSize);
         }
 
         public override void Write(ArchiveWriter writer)
         {
-            throw new NotImplementedException();
+            writer.Write(Blob);
         }
 
         public override void Set(string key, object value)

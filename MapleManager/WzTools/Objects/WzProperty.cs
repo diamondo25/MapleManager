@@ -164,7 +164,7 @@ namespace MapleManager.WzTools.Objects
                             // blob
                             int size = reader.ReadInt32();
                             var pos = reader.BaseStream.Position;
-                            var actualObject = PcomObject.LoadFromBlob(reader, size);
+                            var actualObject = PcomObject.LoadFromBlob(reader, size, name);
                             if (actualObject == null)
                             {
                                 reader.BaseStream.Position = pos;
@@ -173,7 +173,6 @@ namespace MapleManager.WzTools.Objects
                             else
                             {
                                 actualObject.Parent = this;
-                                actualObject.Name = name;
                                 obj = actualObject;
                             }
                             reader.BaseStream.Position = pos + size;

@@ -135,21 +135,32 @@ namespace MapleManager
             if (e.Node == null) return;
             if (!(e.Node is WZTreeNode wtn)) return;
             var tag = wtn.WzObject;
+            
+            if (tag == null)
+            {
+                BeginTreeUpdate();
+                TryLoadNode(tvData.SelectedNode as WZTreeNode);
+                EndTreeUpdate();
+                tag = wtn.WzObject;
+            }
+
             tsslPath.Text = e.Node.FullPath;
-
-
-            BeginTreeUpdate();
-
-            TryLoadNode(tvData.SelectedNode as WZTreeNode);
-            EndTreeUpdate();
-
+            
             textBox1.Text = wtn.Text + Environment.NewLine;
             textBox1.Text += wtn.ToolTipText + Environment.NewLine;
-            textBox1.Text += Environment.NewLine;
-            textBox1.Text += Environment.NewLine;
-            textBox1.Text += "Tag: " + tag?.ToString() + Environment.NewLine;
-            textBox1.Text += "Tag Type: " + tag?.GetType()?.Name + Environment.NewLine;
 
+            if (tag != null)
+            {
+                textBox1.Text += Environment.NewLine;
+                textBox1.Text += Environment.NewLine;
+                textBox1.Text += "Tag: " + tag.ToString() + Environment.NewLine;
+                textBox1.Text += "Tag Type: " + tag.GetType()?.Name + Environment.NewLine;
+
+                if (tag is PcomObject po)
+                {
+                    textBox1.Text += "Object size: " + po.BlobSize + Environment.NewLine;
+                }
+            }
             textBox2.Text = textBox1.Text
                 .Replace("\\r", "")
                 .Replace("\\n", "\r\n")
@@ -210,8 +221,7 @@ namespace MapleManager
 
             InsertFiles(parentNode, folder);
         }
-
-        private const string DummyNodeName = "---DUMMYNODE---";
+        
         private void InsertFiles(TreeNode parentNode, NameSpaceDirectory folder)
         {
             var files = folder.Files.Where(x => x.Name.EndsWith(".img")).ToDictionary(x => x.Name, x => x);
@@ -520,15 +530,9 @@ namespace MapleManager
 
 
                 tvData.BeginUpdate();
-
                 foreach (var node in nodesToLoad)
                 {
-                    var nsf = node.Tag as FSFile;
-                    var obj = nsf.Object;
-                    node.WzObject = obj;
-                    node.Nodes.Clear();
-
-                    node.UpdateData();
+                    node.TryLoad(true);
                 }
                 tvData.EndUpdate();
             }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
 using MapleManager.Controls;
@@ -18,6 +19,7 @@ namespace MapleManager.Scripts.Animator
         public void Start(ScriptNode mainScriptNode)
         {
             Program.MainForm.tvData.AfterSelect += treeView1_AfterSelect;
+            Program.MainForm.Shown += putScreenToFront;
             if (form == null || form.IsDisposed) form = new AnimationForm();
             form.Show();
         }
@@ -26,6 +28,12 @@ namespace MapleManager.Scripts.Animator
         {
             Program.MainForm.tvData.AfterSelect -= treeView1_AfterSelect;
             form.Close();
+        }
+
+
+        private void putScreenToFront(object sender, EventArgs e)
+        {
+            if (form != null) form.BringToFront();
         }
 
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
@@ -49,7 +57,7 @@ namespace MapleManager.Scripts.Animator
                 if (tag is WzProperty && wtn.Name.EndsWith(".img"))
                 {
                     var prop = (WzProperty) tag;
-
+                    int tmp;
                     try_get_anim:
                     if (prop.HasKey("move")) tag = prop["move"];
                     else if (prop.HasKey("fly")) tag = prop["fly"];
@@ -69,7 +77,6 @@ namespace MapleManager.Scripts.Animator
                                     Program.MainForm.TryLoadNode(wtn);
                                     prop = (WzProperty) wtn.WzObject;
                                     goto try_get_anim;
-
                                 }
                             }
                         }

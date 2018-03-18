@@ -40,6 +40,9 @@
     <ApplicationIcon>leatty.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Aga.Controls, Version=1.7.0.0, Culture=neutral, PublicKeyToken=fcc90fbf924463a3, processorArchitecture=MSIL">
+      <HintPath>..\packages\TreeViewAdv.1.7.0.0\lib\net\Aga.Controls.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="PresentationCore" />
     <Reference Include="System" />
@@ -72,6 +75,12 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="ImageExtensions.cs" />
+    <Compile Include="ModifyNode.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ModifyNode.Designer.cs">
+      <DependentUpon>ModifyNode.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scripting\IScript.cs" />
@@ -119,6 +128,9 @@
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ModifyNode.resx">
+      <DependentUpon>ModifyNode.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -132,6 +144,7 @@
     <EmbeddedResource Include="Scripts\Animator\AnimationForm.resx">
       <DependentUpon>AnimationForm.cs</DependentUpon>
     </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -158,7 +171,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>mkdir "Scripts"
-xcopy /s "$(ProjectDir)\Scripts" "Scripts\" /Y</PostBuildEvent>
+    <PostBuildEvent>xcopy /E /C "$(ProjectDir)\Scripts" "Scripts\" /Y</PostBuildEvent>
   </PropertyGroup>
 </Project>

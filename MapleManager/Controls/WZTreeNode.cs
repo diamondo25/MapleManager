@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows.Forms;
 using MapleManager.WzTools.FileSystem;
 using MapleManager.WzTools.Objects;
@@ -26,6 +27,8 @@ namespace MapleManager.Controls
             if (obj is PcomObject pcomObject)
             {
                 pcomObject.TreeNode = this;
+                // TODO: Figure out if there's a way of loading nodes without
+                // actually creating Node's
                 UpdateData(); // Sets all the fields required
             }
             else
@@ -34,6 +37,7 @@ namespace MapleManager.Controls
                 Text = name;
                 ToolTipText = "" + obj;
             }
+            Trace.WriteLine($"Creating {Name}");
 
         }
 
@@ -247,6 +251,9 @@ namespace MapleManager.Controls
             ToolTipText = Text + Environment.NewLine + ToolTipText;
         }
 
+        /// <summary>
+        /// Render nodes from the WzObject
+        /// </summary>
         public void UpdateData()
         {
 

@@ -84,7 +84,6 @@ namespace MapleManager.Scripts.Animator
 
         private void AnimationForm_Load(object sender, System.EventArgs e)
         {
-
         }
 
         private void timer1_Tick(object sender, System.EventArgs e)
