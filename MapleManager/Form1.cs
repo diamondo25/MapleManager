@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using MapleManager.Controls;
+using MapleManager.Properties;
 using MapleManager.Scripts.Animator;
 using MapleManager.WzTools;
 using MapleManager.WzTools.FileSystem;
@@ -43,11 +44,96 @@ namespace MapleManager
         {
             InitializeComponent();
             ResetTree();
+            UpdateLastDirsMenu();
 
-            LoadContentsOfFolder(@"C:\Users\Erwin\Desktop\WzFiles\Data.wz");
+            var lastDir = GetLastDirs().ToList();
+
+            if (lastDir.Count > 0)
+                LoadContentsOfFolder(lastDir[0]);
 
             _mainScriptNode = new ScriptNode(tvData, null);
+        }
 
+        public void UpdateLastDirsMenu()
+        {
+            {
+                var delete = false;
+                // Cleanup elements
+                var elements = new ToolStripItem[fileToolStripMenuItem.DropDownItems.Count];
+                fileToolStripMenuItem.DropDownItems.CopyTo(elements, 0);
+                foreach (var node in elements)
+                {
+                    if (node == fileToolStripSeperator)
+                    {
+                        delete = true;
+                        continue;
+                    }
+                    if (delete)
+                    {
+                        fileToolStripMenuItem.DropDownItems.Remove(node);
+                    }
+                }
+            }
+
+            // Write back the items
+
+            int i = 1;
+            foreach (var dir in GetLastDirs())
+            {
+                var tsmi = new ToolStripMenuItem();
+                tsmi.Text = $"{i}. {dir}";
+                tsmi.Name = dir;
+                tsmi.Click += Tsmi_Click;
+                fileToolStripMenuItem.DropDownItems.Add(tsmi);
+                i++;
+            }
+            if (i == 1)
+            {
+                // Nothing changed.
+                var tsmi = new ToolStripMenuItem();
+                tsmi.Text = "No previously opened folders";
+                tsmi.Enabled = false;
+                fileToolStripMenuItem.DropDownItems.Add(tsmi);
+            }
+        }
+
+        private void Tsmi_Click(object sender, EventArgs e)
+        {
+            var tsmi = (ToolStripMenuItem) sender;
+            LoadContentsOfFolder(tsmi.Name);
+        }
+
+        public IEnumerable<string> GetLastDirs()
+        {
+            Settings.Default.Reload();
+            for (int i = 0; i < 5; i++)
+            {
+                var str = (string) Settings.Default["LastFolder" + (i + 1)];
+                if (string.IsNullOrEmpty(str)) yield break;
+                yield return str;
+            }
+        }
+
+        public void SetLastDirs(List<string> dirs)
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                var name = "LastFolder" + (i + 1);
+                if (dirs.Count <= i) Settings.Default[name] = "";
+                else Settings.Default[name] = dirs[i];
+            }
+            Settings.Default.Save();
+            UpdateLastDirsMenu();
+        }
+
+        public void AddLastDir(string path)
+        {
+            var lastDirs = GetLastDirs().ToList();
+            // Prevent duplicates
+            lastDirs.Remove(path);
+            lastDirs.Insert(0, path);
+
+            SetLastDirs(lastDirs);
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -247,7 +333,10 @@ namespace MapleManager
             fs.Init(folder);
             BeginTreeUpdate();
             LoadContentsSmart(fs);
+            
             EndTreeUpdate();
+
+            AddLastDir(folder);
         }
 
         private void LoadContentsSmart(WzNameSpace ns)

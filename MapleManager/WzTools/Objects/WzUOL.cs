@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -44,7 +45,15 @@ namespace MapleManager.WzTools.Objects
 
         public string ActualPath()
         {
-            return System.IO.Path.GetFullPath(System.IO.Path.Combine("Z:/" + this.Parent.GetFullPath().Replace('/', '\\'), Path.Replace('/', '\\'))).Replace('\\', '/').Substring(3);
+            var stk = new Stack<string>();
+            var elems = (this.Parent.GetFullPath() + "/" + Path).Split('\\', '/');
+            foreach (var elem in elems)
+            {
+                if (elem == "..") stk.Pop();
+                else if (elem == ".") continue;
+                else stk.Push(elem);
+            }
+            return string.Join("/", stk);
         }
 
         public object ActualObject(bool recursiveResolve = false)

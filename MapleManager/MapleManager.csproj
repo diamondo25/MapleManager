@@ -97,6 +97,7 @@
     <Compile Include="Scripts\Hurr\TestScript.cs" />
     <Compile Include="Scripts\StringsLoader\StringsLoader.cs" />
     <Compile Include="Scripts\TestScript.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="Validators\MapValidator.cs" />
     <Compile Include="Validators\WzTreeView.cs" />
     <Compile Include="WzTools\Helpers\ArchiveWriter.cs" />

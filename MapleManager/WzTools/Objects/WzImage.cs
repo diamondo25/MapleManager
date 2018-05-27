@@ -6,6 +6,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
+using MapleManager.WzTools.Helpers;
 using OpenVice.Dev;
 
 namespace MapleManager.WzTools.Objects
@@ -233,6 +234,30 @@ namespace MapleManager.WzTools.Objects
             }
 
             // TODO: Check for compression bytes?
+        }
+
+        public override void Write(ArchiveWriter writer)
+        {
+            writer.Write((byte)0);
+            if (_objects.Count > 0)
+            {
+                writer.Write((byte) 1);
+                base.Write(writer);
+            }
+            else
+            {
+                writer.Write((byte)0);
+            }
+
+            writer.WriteCompressedInt(Width);
+            writer.WriteCompressedInt(Height);
+            writer.WriteCompressedInt((int)PixFormat);
+            writer.WriteCompressedInt(MagLevel);
+
+            for (var i = 0; i < 4; i++)
+                writer.WriteCompressedInt((int)0);
+    
+
         }
 
         private byte[] ARGB16toARGB32(MemoryStream input, long inputLen)
