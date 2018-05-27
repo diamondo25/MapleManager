@@ -99,7 +99,7 @@ namespace MapleManager
 
         private void Tsmi_Click(object sender, EventArgs e)
         {
-            var tsmi = (ToolStripMenuItem) sender;
+            var tsmi = (ToolStripMenuItem)sender;
             LoadContentsOfFolder(tsmi.Name);
         }
 
@@ -108,7 +108,7 @@ namespace MapleManager
             Settings.Default.Reload();
             for (int i = 0; i < 5; i++)
             {
-                var str = (string) Settings.Default["LastFolder" + (i + 1)];
+                var str = (string)Settings.Default["LastFolder" + (i + 1)];
                 if (string.IsNullOrEmpty(str)) yield break;
                 yield return str;
             }
@@ -221,7 +221,7 @@ namespace MapleManager
             if (e.Node == null) return;
             if (!(e.Node is WZTreeNode wtn)) return;
             var tag = wtn.WzObject;
-            
+
             if (tag == null)
             {
                 BeginTreeUpdate();
@@ -231,7 +231,7 @@ namespace MapleManager
             }
 
             tsslPath.Text = e.Node.FullPath;
-            
+
             textBox1.Text = wtn.Text + Environment.NewLine;
             textBox1.Text += wtn.ToolTipText + Environment.NewLine;
 
@@ -307,7 +307,7 @@ namespace MapleManager
 
             InsertFiles(parentNode, folder);
         }
-        
+
         private void InsertFiles(TreeNode parentNode, NameSpaceDirectory folder)
         {
             var files = folder.Files.Where(x => x.Name.EndsWith(".img")).ToDictionary(x => x.Name, x => x);
@@ -333,7 +333,7 @@ namespace MapleManager
             fs.Init(folder);
             BeginTreeUpdate();
             LoadContentsSmart(fs);
-            
+
             EndTreeUpdate();
 
             AddLastDir(folder);
@@ -432,6 +432,23 @@ namespace MapleManager
 
 
                 fsp.Extract(extractPath);
+                void processDirs(NameSpaceDirectory root, int ident)
+                {
+                    Console.WriteLine($"{root.Name,-20}: {root.BeginParsePos,-10} - {root.EndParsePos,-10}");
+                    root.SubDirectories.ForEach(x => processDirs(x, ident + 1));
+                }
+
+                void processFiles(NameSpaceDirectory root, int ident)
+                {
+                    foreach (var nameSpaceFile in root.Files)
+                    {
+                        Console.WriteLine($"  {nameSpaceFile.Name,-18}: {nameSpaceFile.BeginParsePos,-10} - {nameSpaceFile.EndParsePos,-10}");
+                    }
+                    //root.SubDirectories.ForEach(x => processFiles(x, ident + 1));
+                }
+                //processDirs(fsp, 1);
+                //processFiles(fsp, 1);
+
 
             }
             InfoMessage("Done extracting!");

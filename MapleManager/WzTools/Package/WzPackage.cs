@@ -18,6 +18,13 @@ namespace MapleManager.WzTools.Package
         private byte InternalHash { get; set; }
         private int ContentsStart { get; set; }
 
+        /// <summary>
+        /// deMSwZ probably never cared about the position calculation.
+        /// It can function due to the file being written sequentially,
+        /// so its very predictable where you have to continue reading.
+        /// </summary>
+        private bool ReadLike_deMSwZ { get; set; } = false;
+
         public WzPackage(string packagePath, string packageKey)
         {
             Selftest();
@@ -63,6 +70,8 @@ namespace MapleManager.WzTools.Package
 
         private string ReadDeDuplicatedString(bool readByte)
         {
+            return Reader.ReadString(0, 0, 1, ContentsStart);
+
             var off = Reader.ReadInt32();
 
             off += ContentsStart;
@@ -75,8 +84,10 @@ namespace MapleManager.WzTools.Package
         {
             if (readByte && Reader.ReadByte() == 0)
             {
+                Debug.Assert(false);
                 return "";
             }
+            return Reader.ReadString(1, 0, 1, ContentsStart);
 
             // unicode/ascii switch
             var len = Reader.ReadSByte();
@@ -120,7 +131,7 @@ namespace MapleManager.WzTools.Package
                 mask++;
             }
 
-            return Encoding.Unicode.GetString(bytes.ToArray());
+            return Encoding.Unicode.GetString(bytes);
         }
 
         private uint ROL(uint value, byte times) => value << times | value >> (32 - times);
@@ -145,32 +156,86 @@ namespace MapleManager.WzTools.Package
             return CalculateOffset(pos, Reader.ReadUInt32());
         }
 
+        private void ReadFirstStringAfterHeader(byte keyHash, uint hash)
+        {
+            var str = Reader.ReadString((byte)(keyHash == ~hash ? 1 : 0), 1, 0, ContentsStart);
+            Trace.WriteLine("StringAfterHeader: " + str);
+
+            // This is the 'end' of the file, beginning of directories
+            EndParsePos = (int) Reader.BaseStream.Position;
+        }
+
+        private int GetFirstOffset()
+        {
+            var nodes = ReadCompressedInt();
+
+            // Empty dir? weird.
+            if (nodes == 0)
+            {
+                Console.WriteLine("No nodes found in this WZ file.");
+                return 0;
+            }
+
+            byte type = Reader.ReadByte();
+
+            if (type <= 2)
+                ReadDeDuplicatedString(true);
+            else
+                ReadString(false);
+
+            ReadCompressedInt(); // size
+            ReadCompressedInt(); // checksum
+
+            return ReadOffset();
+        }
+
         private void ProcessDirectory(NameSpaceDirectory currentDirectory)
         {
             var nodes = ReadCompressedInt();
             for (var i = 0; i < nodes; i++)
             {
+                var tmp = (int)Reader.BaseStream.Position;
                 var type = Reader.ReadByte();
                 Debug.Assert(type <= 4, "Invalid type found while parsing directory.");
                 var isDir = (type & 1) == 1;
 
                 NameSpaceNode node = isDir ? new NameSpaceDirectory() : (NameSpaceNode)new NameSpaceFile();
-                
+                node.BeginParsePos = tmp;
+
                 node.Name = type <= 2 ? ReadDeDuplicatedString(true) : ReadString(false);
 
                 node.Size = ReadCompressedInt();
                 node.Checksum = ReadCompressedInt();
-                node.OffsetInFile = ReadOffset();
 
-
-                Debug.Assert(node.OffsetInFile <= Reader.BaseStream.Length, "Offset out of file bounds");
-                
+                if (ReadLike_deMSwZ)
+                {
+                    Reader.ReadUInt32(); // Ignore offset
+                }
+                else
+                {
+                    node.OffsetInFile = ReadOffset();
+                    if (node.OffsetInFile < 0) throw new ArgumentOutOfRangeException("Offset not in file.");
+                }
+                tmp = (int)Reader.BaseStream.Position;
+                node.EndParsePos = tmp;
                 currentDirectory.Add(node);
+
+                Console.Write(isDir ? "D" : "F");
+                Console.Write($" {node.Name,-30}: {node.BeginParsePos,-10} - {node.EndParsePos,-10} -");
+                
+                Console.WriteLine(isDir ? node.OffsetInFile.ToString() : "");
             }
 
             foreach (var subDirectory in currentDirectory.SubDirectories)
             {
-                JumpAndReturn(subDirectory.OffsetInFile, () => ProcessDirectory(subDirectory));
+                if (ReadLike_deMSwZ)
+                {
+                    ProcessDirectory(subDirectory);
+                }
+                else
+                {
+                    JumpAndReturn(subDirectory.OffsetInFile, () => ProcessDirectory(subDirectory));
+                }
             }
         }
 
@@ -190,7 +255,7 @@ namespace MapleManager.WzTools.Package
             if (Reader.ReadInt32() != 0) throw new Exception("Expected 0 after size");
 
             ContentsStart = Reader.ReadInt32();
-            // Descriptor. idc
+            // Description, i dont really care. Just continue.
 
             Reader.BaseStream.Position = ContentsStart;
             var hash = Reader.ReadByte();
@@ -198,9 +263,81 @@ namespace MapleManager.WzTools.Package
 
             StringKeyToValues(PackageKey, out var keyHash, out var key);
 
-            if (keyHash != hash && keyHash != -hash)
+
+            var tmp = Reader.BaseStream.Position;
             {
-                throw new Exception($"Invalid package key. Hash mismatch. File: {hash:X8}, calculated {keyHash:X8}");
+                ReadFirstStringAfterHeader(keyHash, hash);
+
+                InternalKey = key;
+                InternalHash = keyHash;
+
+                int offset = GetFirstOffset();
+                Console.WriteLine(
+                    $"Calculated offset {offset}, key {key}, keyHash {keyHash}, hash {hash}, packageKey: {PackageKey}.");
+
+                Reader.BaseStream.Position = tmp;
+            }
+
+
+            if (keyHash != hash && keyHash != ~hash)
+            {
+                Console.WriteLine($"Invalid package key. Hash mismatch.");
+
+                // try to crack, if PackageKey is a number
+                ushort mapleVersion;
+                bool found = false;
+
+                if (ushort.TryParse(PackageKey, out mapleVersion))
+                {
+                    for (ushort i = (ushort)Math.Max(mapleVersion - 200, 0); i < mapleVersion + 500; i++)
+                    {
+                        StringKeyToValues(i.ToString(), out keyHash, out key);
+
+                        if (keyHash != hash && keyHash != ~hash) continue;
+
+                        Reader.BaseStream.Position = tmp;
+                        try
+                        {
+
+                            InternalKey = key;
+                            InternalHash = keyHash;
+                            ReadFirstStringAfterHeader(keyHash, hash);
+
+                            this.SubDirectories.Clear();
+                            this.Files.Clear();
+
+
+                            Console.WriteLine(
+                                $"... key {key}, keyHash {keyHash}, hash {hash}, packageKey: {i.ToString()}.");
+
+                            ProcessDirectory(this);
+
+                        }
+                        catch (ArgumentOutOfRangeException ex)
+                        {
+                            Console.WriteLine($"Its not version {i}.");
+                            continue;
+                        }
+
+
+                        Console.WriteLine($"Cracked as version {i}.");
+                        found = true;
+                        return;
+
+                    }
+
+
+                    Reader.BaseStream.Position = tmp;
+                }
+
+                if (!found)
+                {
+                    if (!ReadLike_deMSwZ)
+                    {
+                        Console.WriteLine("Continue reading like deMSwZ");
+                        ReadLike_deMSwZ = true;
+                    }
+                }
             }
 
             InternalKey = key;
@@ -208,17 +345,7 @@ namespace MapleManager.WzTools.Package
 
             // Okay, everything ready. Lets go.
 
-            if (keyHash == -hash)
-            {
-                var str = ReadDeDuplicatedString(false);
-                Trace.WriteLine(str);
-            }
-            else
-            {
-                var str = ReadString(false);
-                Trace.Write(str);
-            }
-
+            ReadFirstStringAfterHeader(keyHash, hash);
             ProcessDirectory(this);
         }
 

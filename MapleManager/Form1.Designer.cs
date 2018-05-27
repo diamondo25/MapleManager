@@ -77,6 +77,7 @@
             this.cutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pasteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fullyLoadThisToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fileToolStripSeperator = new System.Windows.Forms.ToolStripSeparator();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.scDataTreeAndContent)).BeginInit();
@@ -184,8 +185,8 @@
             // 
             this.scTextBoxes.Panel2.Controls.Add(this.textBox2);
             this.scTextBoxes.Panel2.Controls.Add(this.label2);
-            this.scTextBoxes.Size = new System.Drawing.Size(703, 214);
-            this.scTextBoxes.SplitterDistance = 351;
+            this.scTextBoxes.Size = new System.Drawing.Size(697, 214);
+            this.scTextBoxes.SplitterDistance = 348;
             this.scTextBoxes.TabIndex = 6;
             // 
             // textBox1
@@ -197,7 +198,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox1.Size = new System.Drawing.Size(345, 195);
+            this.textBox1.Size = new System.Drawing.Size(342, 195);
             this.textBox1.TabIndex = 0;
             // 
             // label1
@@ -218,7 +219,7 @@
             this.textBox2.Name = "textBox2";
             this.textBox2.ReadOnly = true;
             this.textBox2.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox2.Size = new System.Drawing.Size(342, 195);
+            this.textBox2.Size = new System.Drawing.Size(339, 195);
             this.textBox2.TabIndex = 1;
             // 
             // label2
@@ -240,7 +241,7 @@
             this.panel1.Controls.Add(this.pbNodeImage);
             this.panel1.Location = new System.Drawing.Point(2, 252);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(705, 254);
+            this.panel1.Size = new System.Drawing.Size(699, 254);
             this.panel1.TabIndex = 5;
             // 
             // pbNodeImage
@@ -248,7 +249,7 @@
             this.pbNodeImage.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pbNodeImage.Location = new System.Drawing.Point(0, 0);
             this.pbNodeImage.Name = "pbNodeImage";
-            this.pbNodeImage.Size = new System.Drawing.Size(705, 254);
+            this.pbNodeImage.Size = new System.Drawing.Size(699, 254);
             this.pbNodeImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pbNodeImage.TabIndex = 0;
             this.pbNodeImage.TabStop = false;
@@ -311,7 +312,8 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.loadToolStripMenuItem,
-            this.extractWZToolStripMenuItem});
+            this.extractWZToolStripMenuItem,
+            this.fileToolStripSeperator});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
@@ -322,7 +324,7 @@
             this.wZToolStripMenuItem,
             this.tsmiLoadDirectory});
             this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
-            this.loadToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.loadToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.loadToolStripMenuItem.Text = "Load";
             // 
             // wZToolStripMenuItem
@@ -342,7 +344,7 @@
             // extractWZToolStripMenuItem
             // 
             this.extractWZToolStripMenuItem.Name = "extractWZToolStripMenuItem";
-            this.extractWZToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.extractWZToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.extractWZToolStripMenuItem.Text = "Extract WZ";
             this.extractWZToolStripMenuItem.Click += new System.EventHandler(this.extractWZToolStripMenuItem_Click);
             // 
@@ -509,6 +511,11 @@
             this.fullyLoadThisToolStripMenuItem.Text = "Fully load this";
             this.fullyLoadThisToolStripMenuItem.Click += new System.EventHandler(this.fullyLoadThisToolStripMenuItem_Click);
             // 
+            // fileToolStripSeperator
+            // 
+            this.fileToolStripSeperator.Name = "fileToolStripSeperator";
+            this.fileToolStripSeperator.Size = new System.Drawing.Size(149, 6);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -595,6 +602,7 @@
         private System.Windows.Forms.ToolStripMenuItem copyImageToClipboardToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveImageToolStripMenuItem;
         public System.Windows.Forms.TreeView tvData;
+        private System.Windows.Forms.ToolStripSeparator fileToolStripSeperator;
     }
 }
 

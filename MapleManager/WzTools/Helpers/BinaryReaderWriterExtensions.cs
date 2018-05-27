@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using MapleManager.WzTools.Package;
 
 namespace MapleManager.WzTools
 {
@@ -122,8 +123,9 @@ namespace MapleManager.WzTools
                 mask++;
             }
 
+            WzEncryption.TryDecryptASCIIString(decoded, y => !y.Any(x => (x <= 0x10 || x >= 0x80)));
 
-            return Encoding.ASCII.GetString(decoded.ToArray());
+            return Encoding.ASCII.GetString(decoded);
         }
 
         private static string DecodeStringUnicode(this BinaryReader reader, sbyte len)
@@ -141,7 +143,7 @@ namespace MapleManager.WzTools
                 mask++;
             }
 
-            return Encoding.Unicode.GetString(bytes.ToArray());
+            return Encoding.Unicode.GetString(bytes);
         }
         
     }
