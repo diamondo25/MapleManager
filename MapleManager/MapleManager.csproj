@@ -116,6 +116,13 @@
     <Compile Include="Scripts\Hurr\TestScript.cs" />
     <Compile Include="Scripts\StringsLoader\StringsLoader.cs" />
     <Compile Include="Scripts\TestScript.cs" />
+    <Compile Include="Scripts\TextRenderer\TextRenderScript.cs" />
+    <Compile Include="Scripts\TextRenderer\TextRenderForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Scripts\TextRenderer\TextRenderForm.Designer.cs">
+      <DependentUpon>TextRenderForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Settings.cs" />
     <Compile Include="Validators\MapValidator.cs" />
     <Compile Include="Validators\WzTreeView.cs" />
@@ -164,6 +171,9 @@
     </Compile>
     <EmbeddedResource Include="Scripts\Animator\AnimationForm.resx">
       <DependentUpon>AnimationForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Scripts\TextRenderer\TextRenderForm.resx">
+      <DependentUpon>TextRenderForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

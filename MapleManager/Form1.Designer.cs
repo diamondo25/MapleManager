@@ -39,9 +39,9 @@
             this.scDataTreeAndContent = new System.Windows.Forms.SplitContainer();
             this.tvData = new System.Windows.Forms.TreeView();
             this.scTextBoxes = new System.Windows.Forms.SplitContainer();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.txtInfoBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.txtInfoBoxNormalized = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.pbNodeImage = new System.Windows.Forms.PictureBox();
@@ -178,12 +178,12 @@
             // 
             // scTextBoxes.Panel1
             // 
-            this.scTextBoxes.Panel1.Controls.Add(this.textBox1);
+            this.scTextBoxes.Panel1.Controls.Add(this.txtInfoBox);
             this.scTextBoxes.Panel1.Controls.Add(this.label1);
             // 
             // scTextBoxes.Panel2
             // 
-            this.scTextBoxes.Panel2.Controls.Add(this.textBox2);
+            this.scTextBoxes.Panel2.Controls.Add(this.txtInfoBoxNormalized);
             this.scTextBoxes.Panel2.Controls.Add(this.label2);
             this.scTextBoxes.Size = new System.Drawing.Size(697, 214);
             this.scTextBoxes.SplitterDistance = 348;
@@ -191,15 +191,15 @@
             // 
             // textBox1
             // 
-            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.txtInfoBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox1.Location = new System.Drawing.Point(3, 16);
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox1.Size = new System.Drawing.Size(342, 195);
-            this.textBox1.TabIndex = 0;
+            this.txtInfoBox.Location = new System.Drawing.Point(3, 16);
+            this.txtInfoBox.Multiline = true;
+            this.txtInfoBox.Name = "txtInfoBox";
+            this.txtInfoBox.ReadOnly = true;
+            this.txtInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtInfoBox.Size = new System.Drawing.Size(342, 195);
+            this.txtInfoBox.TabIndex = 0;
             // 
             // label1
             // 
@@ -212,15 +212,15 @@
             // 
             // textBox2
             // 
-            this.textBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.txtInfoBoxNormalized.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox2.Location = new System.Drawing.Point(3, 16);
-            this.textBox2.Multiline = true;
-            this.textBox2.Name = "textBox2";
-            this.textBox2.ReadOnly = true;
-            this.textBox2.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox2.Size = new System.Drawing.Size(339, 195);
-            this.textBox2.TabIndex = 1;
+            this.txtInfoBoxNormalized.Location = new System.Drawing.Point(3, 16);
+            this.txtInfoBoxNormalized.Multiline = true;
+            this.txtInfoBoxNormalized.Name = "txtInfoBoxNormalized";
+            this.txtInfoBoxNormalized.ReadOnly = true;
+            this.txtInfoBoxNormalized.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtInfoBoxNormalized.Size = new System.Drawing.Size(339, 195);
+            this.txtInfoBoxNormalized.TabIndex = 1;
             // 
             // label2
             // 
@@ -587,10 +587,10 @@
         private System.Windows.Forms.ToolStripMenuItem copyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cutToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem pasteToolStripMenuItem;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox txtInfoBox;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox txtInfoBoxNormalized;
         private System.Windows.Forms.Button btnGoToUOL;
         private System.Windows.Forms.ToolStripMenuItem fullyLoadThisToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem scriptsToolStripMenuItem;

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Windows.Forms;
 using MapleManager.Controls;
 using MapleManager.Properties;
+using MapleManager.Scripts;
 using MapleManager.Scripts.Animator;
 using MapleManager.WzTools;
 using MapleManager.WzTools.FileSystem;
@@ -191,7 +192,10 @@ namespace MapleManager
             }
 
             var anim = new Animator();
-            anim.Start(_mainScriptNode);
+            //anim.Start(_mainScriptNode);
+
+            var tr = new TextRenderScript();
+            tr.Start(_mainScriptNode);
         }
 
 
@@ -232,22 +236,22 @@ namespace MapleManager
 
             tsslPath.Text = e.Node.FullPath;
 
-            textBox1.Text = wtn.Text + Environment.NewLine;
-            textBox1.Text += wtn.ToolTipText + Environment.NewLine;
+            txtInfoBox.Text = wtn.Text + Environment.NewLine;
+            txtInfoBox.Text += wtn.ToolTipText + Environment.NewLine;
 
             if (tag != null)
             {
-                textBox1.Text += Environment.NewLine;
-                textBox1.Text += Environment.NewLine;
-                textBox1.Text += "Tag: " + tag.ToString() + Environment.NewLine;
-                textBox1.Text += "Tag Type: " + tag.GetType()?.Name + Environment.NewLine;
+                txtInfoBox.Text += Environment.NewLine;
+                txtInfoBox.Text += Environment.NewLine;
+                txtInfoBox.Text += "Tag: " + tag.ToString() + Environment.NewLine;
+                txtInfoBox.Text += "Tag Type: " + tag.GetType()?.Name + Environment.NewLine;
 
                 if (tag is PcomObject po)
                 {
-                    textBox1.Text += "Object size: " + po.BlobSize + Environment.NewLine;
+                    txtInfoBox.Text += "Object size: " + po.BlobSize + Environment.NewLine;
                 }
             }
-            textBox2.Text = textBox1.Text
+            txtInfoBoxNormalized.Text = txtInfoBox.Text
                 .Replace("\\r", "")
                 .Replace("\\n", "\r\n")
                 .Replace("\\t", "\t");
