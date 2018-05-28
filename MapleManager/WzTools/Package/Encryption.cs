@@ -160,12 +160,13 @@ namespace MapleManager.WzTools.Package
     static class WzEncryption
     {
         private static IWzEncryption currentEncryption = null;
+        private static IWzEncryption nopEncryption = new NopWzEncryption();
 
         private static IWzEncryption[] cryptos =
         {
+            nopEncryption,
             new GmsWzEncryption(),
             new SeaWzEncryption(),
-            new NopWzEncryption(),
         };
 
         private static byte[] GetCopy(byte[] input)
@@ -203,7 +204,15 @@ namespace MapleManager.WzTools.Package
 
         public static void TryDecryptString(byte[] contents, Func<byte[], bool> validate)
         {
-            if (validate != null && validate(contents)) return;
+            if (validate != null && validate(contents))
+            {
+                if (currentEncryption == null)
+                {
+                    currentEncryption = nopEncryption;
+                    PutCurrentInFront();
+                }
+                return;
+            }
 
             for (var i = 0; i < cryptos.Length; i++)
             {

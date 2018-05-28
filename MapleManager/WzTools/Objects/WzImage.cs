@@ -161,7 +161,7 @@ namespace MapleManager.WzTools.Objects
             {
                 var isPlainZlibStream = reader.ReadByte() == 0x78;
                 reader.BaseStream.Position -= 1;
-                
+
                 var blob = new byte[Math.Min(0x2000, dataSize)];
 
                 if (WzEncryption.HasCurrentCrypto && !isPlainZlibStream)
@@ -209,10 +209,12 @@ namespace MapleManager.WzTools.Objects
                         arr = ARGB16toARGB32(outputStream, uncompressedSize);
                         break;
                     case WzPixFormat.DXT5:
-                        arr = DXTDecoder.Decode(TileWidth, TileHeight, outputStream.ToArray(), DXTDecoder.CompressionType.DXT5);
+                        arr = DXTDecoder.Decode(TileWidth, TileHeight, outputStream.ToArray(),
+                            DXTDecoder.CompressionType.DXT5);
                         break;
                     case WzPixFormat.DXT3:
-                        arr = DXTDecoder.Decode(TileWidth, TileHeight, outputStream.ToArray(), DXTDecoder.CompressionType.DXT3);
+                        arr = DXTDecoder.Decode(TileWidth, TileHeight, outputStream.ToArray(),
+                            DXTDecoder.CompressionType.DXT3);
                         break;
                     default:
                         arr = outputStream.ToArray();
@@ -225,10 +227,14 @@ namespace MapleManager.WzTools.Objects
                 // TODO: Figure out why some images are not transparent
                 switch (PixFormat)
                 {
-                    case WzPixFormat.R5G6B5: format = PixelFormat.Format16bppRgb565; break;
+                    case WzPixFormat.R5G6B5:
+                        format = PixelFormat.Format16bppRgb565;
+                        break;
                     case WzPixFormat.A4R4G4B4:
                     case WzPixFormat.A8R8G8B8:
-                    default: format = PixelFormat.Format32bppArgb; break;
+                    default:
+                        format = PixelFormat.Format32bppArgb;
+                        break;
                 }
 
                 output = new Bitmap(TileWidth, TileHeight, format);
@@ -252,8 +258,6 @@ namespace MapleManager.WzTools.Objects
                 }
                 Tile = output;
             }
-
-            // TODO: Check for compression bytes?
         }
 
         public override void Write(ArchiveWriter writer)

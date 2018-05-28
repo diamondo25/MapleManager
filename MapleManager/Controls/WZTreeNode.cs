@@ -248,7 +248,10 @@ namespace MapleManager.Controls
                     ToolTipText += o.Key + ": " + o.Value.Text;
                 }
             }
-            ToolTipText = Text + Environment.NewLine + ToolTipText;
+
+            var tttt = Text;
+            if (tttt.Length > 100) tttt = tttt.Substring(0, 100);
+            ToolTipText = tttt + Environment.NewLine + ToolTipText;
         }
 
         /// <summary>

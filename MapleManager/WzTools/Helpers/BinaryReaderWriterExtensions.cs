@@ -135,9 +135,9 @@ namespace MapleManager.WzTools
                 mask++;
             }
 
-            WzEncryption.TryDecryptString(bytes, y => !y.Any(x => (x < 0x20 || x >= 0x7F) && x != '\n' && x != '\r'));
-
-            return Encoding.ASCII.GetString(bytes);
+            WzEncryption.TryDecryptString(bytes, y => !y.Any(x => x < 0x20 && x != '\n' && x != '\r' && x != '\t'));
+            
+            return Encoding.ASCII.GetString(Encoding.Convert(Encoding.UTF8, Encoding.ASCII, bytes));
         }
 
         private static string DecodeStringUnicode(this BinaryReader reader, sbyte len)
