@@ -66,6 +66,18 @@ namespace MapleManager.WzTools
             return ret;
         }
 
+        public static string ReadString(this BinaryReader reader, bool deduplicated, int contentsStart = 0)
+        {
+            if (!deduplicated)
+            {
+                return reader.DecodeString();
+            }
+            else
+            {
+                return reader.ReadDeDuplicatedString(contentsStart);
+            }
+        }
+
         public static string ReadString(this BinaryReader reader, byte id, byte existingID, byte newID, int contentsStart = 0)
         {
             if (id == newID)
@@ -115,17 +127,17 @@ namespace MapleManager.WzTools
             else actualLen = -len;
 
             byte mask = 0xAA;
-            var decoded = reader.ReadBytes(actualLen);
+            var bytes = reader.ReadBytes(actualLen);
 
             for (var i = 0; i < actualLen; i++)
             {
-                decoded[i] ^= mask;
+                bytes[i] ^= mask;
                 mask++;
             }
 
-            WzEncryption.TryDecryptASCIIString(decoded, y => !y.Any(x => (x <= 0x10 || x >= 0x80)));
+            WzEncryption.TryDecryptString(bytes, y => !y.Any(x => (x < 0x20 || x >= 0x7F) && x != '\n' && x != '\r'));
 
-            return Encoding.ASCII.GetString(decoded);
+            return Encoding.ASCII.GetString(bytes);
         }
 
         private static string DecodeStringUnicode(this BinaryReader reader, sbyte len)
@@ -142,6 +154,8 @@ namespace MapleManager.WzTools
                 bytes[i + 1] ^= (byte)((mask >> 8) & 0xFF);
                 mask++;
             }
+
+            WzEncryption.TryDecryptString(bytes, null);
 
             return Encoding.Unicode.GetString(bytes);
         }

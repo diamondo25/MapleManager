@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using MapleManager.WzTools.Helpers;
+using MapleManager.WzTools.Package;
 using OpenVice.Dev;
 
 namespace MapleManager.WzTools.Objects
@@ -158,22 +159,41 @@ namespace MapleManager.WzTools.Objects
             using (var outputStream = new MemoryStream(ExpectedDataSize))
             using (var inputStream = new MemoryStream(dataSize))
             {
-                // Skip header
-                reader.BaseStream.Position += 2;
-
+                var isPlainZlibStream = reader.ReadByte() == 0x78;
+                reader.BaseStream.Position -= 1;
+                
                 var blob = new byte[Math.Min(0x2000, dataSize)];
-                for (var i = 0; i < dataSize;)
+
+                if (WzEncryption.HasCurrentCrypto && !isPlainZlibStream)
                 {
-                    var blobSize = Math.Min(blob.Length, dataSize - i);
-                    reader.Read(blob, 0, blobSize);
-                    inputStream.Write(blob, 0, blobSize);
-                    i += blobSize;
+                    // Need to skip 1
+                    for (var i = 1; i < dataSize;)
+                    {
+                        var blobSize = reader.ReadInt32();
+                        i += 4;
+                        Array.Resize(ref blob, blobSize);
+                        reader.Read(blob, 0, blobSize);
+
+                        WzEncryption.TryDecryptImage(blob);
+                        inputStream.Write(blob, 0, blobSize);
+                        i += blobSize;
+                    }
+                }
+                else
+                {
+                    for (var i = 0; i < dataSize;)
+                    {
+                        var blobSize = Math.Min(blob.Length, dataSize - i);
+                        reader.Read(blob, 0, blobSize);
+                        inputStream.Write(blob, 0, blobSize);
+                        i += blobSize;
+                    }
                 }
 
-                inputStream.Position = 0;
-                using (var gzip = new DeflateStream(inputStream, CompressionMode.Decompress))
+                inputStream.Position = 2;
+                using (var deflate = new DeflateStream(inputStream, CompressionMode.Decompress))
                 {
-                    gzip.CopyTo(outputStream);
+                    deflate.CopyTo(outputStream);
                 }
 
 
@@ -241,7 +261,7 @@ namespace MapleManager.WzTools.Objects
             writer.Write((byte)0);
             if (_objects.Count > 0)
             {
-                writer.Write((byte) 1);
+                writer.Write((byte)1);
                 base.Write(writer);
             }
             else
@@ -256,7 +276,7 @@ namespace MapleManager.WzTools.Objects
 
             for (var i = 0; i < 4; i++)
                 writer.WriteCompressedInt((int)0);
-    
+
 
         }
 

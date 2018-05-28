@@ -7,7 +7,6 @@ namespace MapleManager.WzTools.Package
 {
     interface IWzEncryption
     {
-        bool IsThisEncryption(byte[] bytes, byte[] expected);
         void Decrypt(byte[] bytes);
         void Encrypt(byte[] bytes);
     }
@@ -121,17 +120,7 @@ namespace MapleManager.WzTools.Package
         {
 
         }
-
-        public bool IsThisEncryption(byte[] bytes, byte[] expected)
-        {
-            var copy = new byte[bytes.Length];
-            Buffer.BlockCopy(bytes, 0, copy, 0, copy.Length);
-
-            XorData(copy);
-
-            return copy.SequenceEqual(expected);
-        }
-
+        
         public void Decrypt(byte[] bytes)
         {
             XorData(bytes);
@@ -157,6 +146,17 @@ namespace MapleManager.WzTools.Package
         }
     }
 
+    class NopWzEncryption : IWzEncryption
+    {
+        public void Decrypt(byte[] bytes)
+        {
+        }
+
+        public void Encrypt(byte[] bytes)
+        {
+        }
+    }
+
     static class WzEncryption
     {
         private static IWzEncryption currentEncryption = null;
@@ -165,6 +165,7 @@ namespace MapleManager.WzTools.Package
         {
             new GmsWzEncryption(),
             new SeaWzEncryption(),
+            new NopWzEncryption(),
         };
 
         private static byte[] GetCopy(byte[] input)
@@ -188,9 +189,21 @@ namespace MapleManager.WzTools.Package
             }
         }
 
-        public static void TryDecryptASCIIString(byte[] contents, Func<byte[], bool> validate)
+        public static bool HasCurrentCrypto => currentEncryption != null;
+
+        public static void TryDecryptImage(byte[] contents)
         {
-            if (validate(contents)) return;
+            // I'm not going to try and crack it
+            // This is because a Property should already be succesfully decoded, setting currentEncryption.
+            if (currentEncryption != null)
+            {
+                currentEncryption.Decrypt(contents);
+            }
+        }
+
+        public static void TryDecryptString(byte[] contents, Func<byte[], bool> validate)
+        {
+            if (validate != null && validate(contents)) return;
 
             for (var i = 0; i < cryptos.Length; i++)
             {
@@ -198,12 +211,12 @@ namespace MapleManager.WzTools.Package
                 var crypto = cryptos[i];
 
                 crypto.Decrypt(copy);
-                if (validate(copy))
+                if (validate == null || validate(copy))
                 {
                     // seems to have worked
                     copy.CopyTo(contents, 0);
 
-                    if (crypto != currentEncryption)
+                    if (validate != null && crypto != currentEncryption)
                     {
                         Console.WriteLine("Found crypto {0}", crypto);
                         currentEncryption = crypto;

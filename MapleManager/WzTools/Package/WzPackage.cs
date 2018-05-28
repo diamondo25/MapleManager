@@ -66,74 +66,7 @@ namespace MapleManager.WzTools.Package
         private int ReadCompressedInt() => Reader.ReadCompressedInt();
 
         private void JumpAndReturn(int offset, Action andNow) => Reader.JumpAndReturn(offset, andNow);
-        private T JumpAndReturn<T>(int offset, Func<T> andNow) => Reader.JumpAndReturn(offset, andNow);
-
-        private string ReadDeDuplicatedString(bool readByte)
-        {
-            return Reader.ReadString(0, 0, 1, ContentsStart);
-
-            var off = Reader.ReadInt32();
-
-            off += ContentsStart;
-
-            return JumpAndReturn(off, () => ReadString(readByte));
-        }
-
-
-        private string ReadString(bool readByte)
-        {
-            if (readByte && Reader.ReadByte() == 0)
-            {
-                Debug.Assert(false);
-                return "";
-            }
-            return Reader.ReadString(1, 0, 1, ContentsStart);
-
-            // unicode/ascii switch
-            var len = Reader.ReadSByte();
-            if (len == 0) return "";
-
-            var unicode = len > 0;
-
-            if (unicode) return DecodeStringUnicode(len);
-            else return DecodeStringASCII(len);
-        }
-
-        private string DecodeStringASCII(sbyte len)
-        {
-            int actualLen;
-            if (len == -128) actualLen = Reader.ReadInt32();
-            else actualLen = -len;
-
-            byte mask = 0xAA;
-            var decoded = Reader.ReadBytes(actualLen).Select(x =>
-            {
-                x ^= mask;
-                mask++;
-                return x;
-            });
-
-            return Encoding.ASCII.GetString(decoded.ToArray());
-        }
-
-        private string DecodeStringUnicode(sbyte len)
-        {
-            int actualLen = len;
-            if (len == 127) actualLen = Reader.ReadInt32();
-            actualLen *= 2;
-
-            ushort mask = 0xAAAA;
-            var bytes = Reader.ReadBytes(actualLen);
-            for (var i = 0; i < actualLen; i += 2)
-            {
-                bytes[i + 0] ^= (byte)(mask & 0xFF);
-                bytes[i + 1] ^= (byte)((mask >> 8) & 0xFF);
-                mask++;
-            }
-
-            return Encoding.Unicode.GetString(bytes);
-        }
-
+        
         private uint ROL(uint value, byte times) => value << times | value >> (32 - times);
 
         public int DecodeOffset(int currentPosition, uint encryptedOffset)
@@ -158,7 +91,7 @@ namespace MapleManager.WzTools.Package
 
         private void ReadFirstStringAfterHeader(byte keyHash, uint hash)
         {
-            var str = Reader.ReadString((byte)(keyHash == ~hash ? 1 : 0), 1, 0, ContentsStart);
+            var str = Reader.ReadString(keyHash == ~hash, ContentsStart);
             Trace.WriteLine("StringAfterHeader: " + str);
 
             // This is the 'end' of the file, beginning of directories
@@ -177,11 +110,7 @@ namespace MapleManager.WzTools.Package
             }
 
             byte type = Reader.ReadByte();
-
-            if (type <= 2)
-                ReadDeDuplicatedString(true);
-            else
-                ReadString(false);
+            Reader.ReadString(type <= 2, ContentsStart + 1);
 
             ReadCompressedInt(); // size
             ReadCompressedInt(); // checksum
@@ -202,7 +131,7 @@ namespace MapleManager.WzTools.Package
                 NameSpaceNode node = isDir ? new NameSpaceDirectory() : (NameSpaceNode)new NameSpaceFile();
                 node.BeginParsePos = tmp;
 
-                node.Name = type <= 2 ? ReadDeDuplicatedString(true) : ReadString(false);
+                node.Name = Reader.ReadString(type <= 2, ContentsStart + 1);
 
                 node.Size = ReadCompressedInt();
                 node.Checksum = ReadCompressedInt();
@@ -216,14 +145,17 @@ namespace MapleManager.WzTools.Package
                     node.OffsetInFile = ReadOffset();
                     if (node.OffsetInFile < 0) throw new ArgumentOutOfRangeException("Offset not in file.");
                 }
+
                 tmp = (int)Reader.BaseStream.Position;
                 node.EndParsePos = tmp;
                 currentDirectory.Add(node);
 
+#if DEBUG
                 Console.Write(isDir ? "D" : "F");
                 Console.Write($" {node.Name,-30}: {node.BeginParsePos,-10} - {node.EndParsePos,-10} -");
                 
                 Console.WriteLine(isDir ? node.OffsetInFile.ToString() : "");
+#endif
             }
 
             foreach (var subDirectory in currentDirectory.SubDirectories)
@@ -252,7 +184,7 @@ namespace MapleManager.WzTools.Package
                 throw new Exception("This is not a WZ package (mismatch header, expected PKG1)");
 
             var size = Reader.ReadInt32();
-            if (Reader.ReadInt32() != 0) throw new Exception("Expected 0 after size");
+            if (Reader.ReadInt32() != 0) throw new Exception("Expected 0 after size (error: 0x80004001)");
 
             ContentsStart = Reader.ReadInt32();
             // Description, i dont really care. Just continue.

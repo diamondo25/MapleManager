@@ -430,25 +430,7 @@ namespace MapleManager
                     return;
                 }
 
-
                 fsp.Extract(extractPath);
-                void processDirs(NameSpaceDirectory root, int ident)
-                {
-                    Console.WriteLine($"{root.Name,-20}: {root.BeginParsePos,-10} - {root.EndParsePos,-10}");
-                    root.SubDirectories.ForEach(x => processDirs(x, ident + 1));
-                }
-
-                void processFiles(NameSpaceDirectory root, int ident)
-                {
-                    foreach (var nameSpaceFile in root.Files)
-                    {
-                        Console.WriteLine($"  {nameSpaceFile.Name,-18}: {nameSpaceFile.BeginParsePos,-10} - {nameSpaceFile.EndParsePos,-10}");
-                    }
-                    //root.SubDirectories.ForEach(x => processFiles(x, ident + 1));
-                }
-                //processDirs(fsp, 1);
-                //processFiles(fsp, 1);
-
 
             }
             InfoMessage("Done extracting!");
