@@ -39,10 +39,12 @@
             this.txtExplanation.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtExplanation.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtExplanation.Location = new System.Drawing.Point(12, 39);
             this.txtExplanation.Multiline = true;
             this.txtExplanation.Name = "txtExplanation";
             this.txtExplanation.ReadOnly = true;
+            this.txtExplanation.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.txtExplanation.Size = new System.Drawing.Size(564, 303);
             this.txtExplanation.TabIndex = 1;
             // 

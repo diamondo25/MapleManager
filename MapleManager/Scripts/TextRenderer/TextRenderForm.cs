@@ -35,7 +35,7 @@ Skill
         
         private void ParseText()
         {
-            var tp = new TextParser(txtIn.Text, MainScriptNode);
+            var tp = new TextParser(txtIn.Text, MainScriptNode, null);
             var results = tp.RenderText(txtOut);
             lbParseResults.Items.Clear();
             foreach (var result in results)

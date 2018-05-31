@@ -13,11 +13,15 @@ namespace MapleManager.Scripts.TextRenderer
     {
         public string Text { get; set; }
         private ScriptNode MainScriptNode;
+        private Dictionary<long, string> QuestRecord;
 
-        public TextParser(string text, ScriptNode mainScriptNode)
+        public TextParser(string text, ScriptNode mainScriptNode, Dictionary<long, string> questRecord)
         {
             this.Text = text;
             MainScriptNode = mainScriptNode;
+            QuestRecord = questRecord;
+            if (QuestRecord == null)
+                QuestRecord = new Dictionary<long, string>();
         }
 
 
@@ -130,6 +134,28 @@ namespace MapleManager.Scripts.TextRenderer
             return ret;
         }
 
+        class SelectedMob
+        {
+            public int MobId;
+            public bool Abs;
+            public int BonusEXP;
+        }
+
+        private static SelectedMob DecodeSelectedMob(string questRecordValue)
+        {
+            var elems = questRecordValue.Split('/');
+            if (elems.Length >= 3)
+            {
+                return new SelectedMob
+                {
+                    MobId = int.Parse(elems[0]),
+                    Abs = int.Parse(elems[1]) != 0,
+                    BonusEXP = int.Parse(elems[2])
+                };
+            }
+            return null;
+        }
+
         enum StringType
         {
             Item,
@@ -139,7 +165,7 @@ namespace MapleManager.Scripts.TextRenderer
             Map
         }
 
-        private string GetString(StringType type, int id, string field)
+        private string GetString(StringType type, int id, string field = "name")
         {
             int inv = id / 1000000;
             if (type == StringType.Item && inv == 1)
@@ -556,6 +582,7 @@ namespace MapleManager.Scripts.TextRenderer
             int curLine = 0;
             int fontSize = 8;
             string font = "arial";
+            string extraInfo = null;
             Image img = null;
 
             while (phrase != "")
@@ -595,6 +622,7 @@ namespace MapleManager.Scripts.TextRenderer
                                     case Phrase.FontSize:
                                         {
                                             var x = phrase.Substring(3);
+                                            extraInfo = "Font size " + x;
                                             int.TryParse(x, out fontSize);
                                             fontSize = Math.Max(fontSize, 1);
                                             phrase = "";
@@ -603,28 +631,33 @@ namespace MapleManager.Scripts.TextRenderer
                                     case Phrase.FontName:
                                         {
                                             var x = phrase.Substring(3);
+                                            extraInfo = "Font name " + x;
                                             font = x;
                                             phrase = "";
                                             break;
                                         }
 
                                     case Phrase.ItemIcon:
+                                        extraInfo = "Item icon";
                                         img = GetItemImage(GetParameterNo(phrase));
                                         phrase = "";
                                         break;
 
 
                                     case Phrase.ItemIcon_Secret:
-                                        phrase = "(only if item not in inventory)";
+                                        extraInfo = "Secret item " + GetParameterNo(phrase);
+                                        phrase = "";
                                         img = GetItemImage(3800088);
                                         break;
                                     case Phrase.SkillIcon:
+                                        extraInfo = "Skill icon " + GetParameterNo(phrase);
                                         img = GetSkillImage(GetParameterNo(phrase));
-                                        phrase = "(skill icon " + GetParameterNo(phrase) + ")";
+                                        phrase = "";
                                         break;
                                     case Phrase.Canvas:
-                                        // #FUI/MapleTV.img/TVon/0#
-                                        phrase = phrase.Substring(2);
+                                        // #F UI/MapleTV.img/TVon/0#
+                                        phrase = phrase.Substring(3);
+                                        extraInfo = "Canvas " + phrase;
                                         img = GetImage(phrase);
                                         if (img == null)
                                         {
@@ -648,32 +681,80 @@ namespace MapleManager.Scripts.TextRenderer
                                             var no = GetParameterNo(phrase);
                                             switch (phrase[1])
                                             {
-                                                case 'e': phrase = "(secret itemname " + no + ")"; break;
-                                                case 't': phrase = GetString(StringType.Item, no, "name"); break;
-                                                case 'z': phrase = GetString(StringType.Item, no, "name"); break; // Looks the same like 'T', but possibly older? It doesnt try to handle the unique 'unknown' itemid
-                                                case 'o': phrase = GetString(StringType.Mob, no, "name"); break;
+                                                case 'e':
+                                                    extraInfo = "Secret item name " + no;
+                                                    phrase = "(secret itemname " + no + ")";
+                                                    break;
+                                                case 't': phrase = GetString(StringType.Item, no); break;
+                                                case 'z': phrase = GetString(StringType.Item, no); break;
+                                                case 'o': phrase = GetString(StringType.Mob, no); break;
                                                 case 'h': phrase = "(charname)"; break;
-                                                case 'p': phrase = GetString(StringType.Npc, no, "name"); break;
+                                                case 'p': phrase = GetString(StringType.Npc, no); break;
                                                 case 'm': phrase = GetString(StringType.Map, no, "mapName"); break;
-                                                case 'q': phrase = GetString(StringType.Skill, no, "name"); break;
+                                                case 'q': phrase = GetString(StringType.Skill, no); break;
                                                 case 'c': phrase = "(Items in inventory of ID " + no + ")"; break;
                                                 case 'a':
                                                     {
+
                                                         int qrId = no / 10;
                                                         int idx = no % 10;
                                                         int start = idx * 3 - 3;
-                                                        int end = start + 3;
-                                                        string format = "";
-                                                        for (int i = 1; i <= idx; i++)
-                                                            if (i == idx)
-                                                                format += "000";
-                                                            else
-                                                                format += "___";
-                                                        phrase = "(Value saved in QuestRecord " + qrId + " format " + format + ")";
+
+                                                        extraInfo = "Mob kill count idx " + idx;
+
+                                                        int count = 0;
+                                                        if (QuestRecord.ContainsKey(qrId))
+                                                        {
+                                                            var val = QuestRecord[qrId];
+                                                            if (val.Length >= idx * 3)
+                                                            {
+                                                                int.TryParse(val.Substring(start, 3), out count);
+                                                            }
+                                                        }
+
+                                                        phrase = count.ToString();
                                                         break;
                                                     }
-                                                case 'M': phrase = "(QuestMobName from mobid inside QuestRecord " + no + " eg 100100/0/0)"; break;
-                                                case 'x': phrase = "(QuestBonusEXP from QuestRecord " + no + " eg 0/a/1337, where a = abs)"; break;
+                                                case 'M':
+                                                    {
+                                                        extraInfo = "(QuestMobName from mobid inside QuestRecord " + no + " eg 100100/0/0)";
+
+                                                        int qrId = no;
+                                                        phrase = "";
+
+                                                        if (QuestRecord.ContainsKey(qrId))
+                                                        {
+                                                            var val = QuestRecord[qrId];
+
+                                                            var x = DecodeSelectedMob(val);
+                                                            if (x != null)
+                                                            {
+                                                                phrase = GetString(StringType.Mob, x.MobId);
+                                                            }
+                                                        }
+
+                                                        break;
+                                                    }
+                                                case 'x':
+                                                    {
+                                                        extraInfo = "(QuestBonusEXP from QuestRecord " + no + " eg 0/a/1337, where a = abs)";
+
+                                                        int qrId = no;
+                                                        phrase = "";
+
+                                                        if (QuestRecord.ContainsKey(qrId))
+                                                        {
+                                                            var val = QuestRecord[qrId];
+
+                                                            var x = DecodeSelectedMob(val);
+                                                            if (x != null)
+                                                            {
+                                                                phrase = string.Format(x.Abs ? "+{0}" : "{0}%", x.BonusEXP);
+                                                            }
+                                                        }
+
+                                                        break;
+                                                    }
                                                 case 'y':
                                                     {
                                                         if (phrase.Length > 3 && phrase[3] == '@')
