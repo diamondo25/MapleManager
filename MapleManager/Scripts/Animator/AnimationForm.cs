@@ -99,8 +99,10 @@ namespace MapleManager.Scripts.Animator
 
             e.Graphics.DrawLine(pen, Width / 2, 0, Width / 2, Height);
 
-
-            e.Graphics.DrawImageUnscaled(frames[currentFrame].Image.Tile, drawImageX, drawImageY);
+            if (frames.Count > currentFrame)
+            {
+                e.Graphics.DrawImageUnscaled(frames[currentFrame].Image.Tile, drawImageX, drawImageY);
+            }
         }
 
         private void AnimationForm_Load(object sender, System.EventArgs e)
