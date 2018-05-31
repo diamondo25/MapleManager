@@ -15,6 +15,7 @@ namespace MapleManager.Scripts
         {
             Program.MainForm.Shown += putScreenToFront;
             if (form == null || form.IsDisposed) form = new TextRenderForm();
+            form.MainScriptNode = mainScriptNode;
             form.Show();
         }
 

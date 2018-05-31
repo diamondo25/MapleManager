@@ -37,7 +37,7 @@ namespace MapleManager.Controls
                 Text = name;
                 ToolTipText = "" + obj;
             }
-            Trace.WriteLine($"Creating {Name}");
+            // Trace.WriteLine($"Creating {Name}");
 
         }
 

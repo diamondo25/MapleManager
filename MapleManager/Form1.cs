@@ -192,10 +192,17 @@ namespace MapleManager
             }
 
             var anim = new Animator();
-            //anim.Start(_mainScriptNode);
+            anim.Start(_mainScriptNode);
 
             var tr = new TextRenderScript();
-            tr.Start(_mainScriptNode);
+            //tr.Start(_mainScriptNode);
+
+            if (string.IsNullOrEmpty(Settings.Default.SelectedNode) == false)
+            {
+                var node = _mainScriptNode.GetNode(Settings.Default.SelectedNode)?.TryGetTreeNode();
+                node?.EnsureVisible();
+                tvData.SelectedNode = node;
+            }
         }
 
 
@@ -284,6 +291,14 @@ namespace MapleManager
             {
                 tvData.ContextMenuStrip = null;
             }
+
+            var path = e.Node.FullPath;
+            if (path.Contains(".img/"))
+            {
+                path = path.Substring(0, path.IndexOf(".img/") + 4);
+            }
+            Settings.Default.SelectedNode = path;
+            Settings.Default.Save();
         }
 
         private void InsertDirectories(WZTreeNode parentNode, NameSpaceDirectory folder)
@@ -532,8 +547,11 @@ namespace MapleManager
 
         private void tvData_MouseDoubleClick(object sender, MouseEventArgs e)
         {
+            var node = tvData.SelectedNode as WZTreeNode;
+            if (node == null) return;
+            if (!node.IsNotLoaded()) return;
             BeginTreeUpdate();
-            TryLoadNode(tvData.SelectedNode as WZTreeNode);
+            TryLoadNode(node);
             EndTreeUpdate();
         }
 
@@ -546,7 +564,7 @@ namespace MapleManager
                 node.TryLoad(false);
                 // tvData.EndUpdate();
             }
-            catch (NotImplementedException ex)
+            catch (Exception ex)
             {
                 ErrorMessage($"Unable to load {node.Name}... {ex}");
             }

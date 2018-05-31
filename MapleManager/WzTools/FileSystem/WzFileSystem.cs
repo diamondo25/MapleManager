@@ -7,43 +7,49 @@ namespace MapleManager.WzTools.FileSystem
     {
         private static void LoadDirectories(NameSpaceDirectory parentNode, DirectoryInfo folder)
         {
-            var dirs = folder.GetDirectories().ToDictionary(x => x.Name, x => x);
-
             // Build structure out of dirs
-            foreach (var kvp in dirs)
-            {
-                var name = kvp.Key;
-                if (parentNode.SubDirectories.Exists(x => x.Name == name)) continue;
+            var dirNodes = folder.GetDirectories()
+                .Where(x => !parentNode.SubDirectories.Exists(y => y.Name == x.Name))
+                .Select(dir =>
 
-                var node = new FSDirectory();
-                node.Size = 0;
-                node.Name = name;
-                node.OffsetInFile = -1;
-                node.RealPath = folder.FullName;
-                LoadDirectories(node, kvp.Value);
+                    {
+                        var name = dir.Name;
 
-                parentNode.Add(node);
-            }
+                        var node = new FSDirectory();
+                        node.Size = 0;
+                        node.Name = name;
+                        node.OffsetInFile = -1;
+                        node.RealPath = folder.FullName;
+                        LoadDirectories(node, dir);
 
+                        return node;
+                    }
+                );
+
+            parentNode.AddDirectories(dirNodes);
             LoadFiles(parentNode, folder);
+            
         }
 
         private static void LoadFiles(NameSpaceDirectory parentNode, DirectoryInfo folder)
         {
-            var files = folder.GetFiles("*.img").ToDictionary(x => x.Name, x => x);
+            var files = folder.GetFiles("*.img")
+                .AsParallel()
+                .Where(x => !parentNode.Files.Exists(y => y.Name == x.Name))
+                .Select(file =>
+                    {
+                        var name = file.Name;
 
-            foreach (var kvp in files)
-            {
-                var name = kvp.Key;
-                if (parentNode.Files.Exists(x => x.Name == name)) continue;
+                        var node = new FSFile();
+                        node.Size = (int) file.Length;
+                        node.Name = name;
+                        node.OffsetInFile = -1;
+                        node.RealPath = file.FullName;
+                        return node;
+                    }
+                );
 
-                var node = new FSFile();
-                node.Size = (int)kvp.Value.Length;
-                node.Name = name;
-                node.OffsetInFile = -1;
-                node.RealPath = kvp.Value.FullName;
-                parentNode.Add(node);
-            }
+            parentNode.AddFiles(files.ToList());
         }
 
         public void Init(string folder)

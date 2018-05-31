@@ -1,0 +1,3 @@
+[submodule "AnimatedGif"]
+	path = AnimatedGif
+	url = git@github.com:mrousavy/AnimatedGif.git

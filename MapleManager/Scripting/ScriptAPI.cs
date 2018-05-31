@@ -125,6 +125,9 @@ namespace MapleManager
                 if (node == "..") ret = ret._parent;
                 else if (node == ".") continue;
                 else ret = ret[node];
+
+
+                if (ret == null) return null;
             }
 
             return ret;

@@ -15,6 +15,16 @@ namespace MapleManager.WzTools
             else throw new Exception("Invalid PackageNode");
         }
 
+        public void AddDirectories(IEnumerable<NameSpaceDirectory> directories)
+        {
+            SubDirectories.AddRange(directories);
+        }
+
+        public void AddFiles(IEnumerable<NameSpaceFile> files)
+        {
+            Files.AddRange(files);
+        }
+
         public override string ToString()
         {
             return "Dir: " + Name;

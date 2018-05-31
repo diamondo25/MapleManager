@@ -49,7 +49,7 @@ namespace MapleManager.Scripts.Animator
 
             try
             {
-                Program.MainForm.BeginTreeUpdate();
+                //Program.MainForm.BeginTreeUpdate();
 
                 var wtn = (WZTreeNode) e.Node;
                 var tag = wtn.WzObject;
@@ -108,6 +108,7 @@ namespace MapleManager.Scripts.Animator
                         foundAny = true;
                         if (!(p is WzImage || p is WzUOL))
                         {
+                            if (i == 0) continue;
                             indexesAreImageOrUOL = false;
                             break;
                         }
@@ -175,7 +176,7 @@ namespace MapleManager.Scripts.Animator
             }
             finally
             {
-                Program.MainForm.EndTreeUpdate();
+               // Program.MainForm.EndTreeUpdate();
             }
         }
 

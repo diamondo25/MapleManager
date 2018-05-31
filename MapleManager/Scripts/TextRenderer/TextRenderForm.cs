@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using MapleManager.Controls;
 
 namespace MapleManager.Scripts.TextRenderer
 {
@@ -13,12 +14,100 @@ namespace MapleManager.Scripts.TextRenderer
             InitializeComponent();
         }
 
+        public ScriptNode MainScriptNode { get; set; }
+
         private void TextRenderForm_Load(object sender, EventArgs e)
         {
             txtIn.Text = "#t4031161##b#c4031161##k/5 ";
+            txtIn.Text = @"
+Snail: #o100100#
+Map 0: #m0#
+Item 1000000: #t1000000#
+Item 2000000: #t2000000#
+Item 3010000: #t3010000#
+Item 4000000: #t4000000#
+Item 5010000: #t5010000#
+Skill 
+
+";
             ParseText();
         }
 
+        enum StringType
+        {
+            Item,
+            Npc,
+            Mob,
+            Skill,
+            Map
+        }
+
+        private string GetString(StringType type, int id, string field)
+        {
+            int category = id / 1000000;
+            if (type == StringType.Item && category == 1)
+            {
+                // Oh boy, this one is a bit harder.
+                // Eqp.img/Eqp/categoryname/id ...
+                // Lets just iterate over each category and try to find it
+
+                foreach (var eqpCategory in MainScriptNode.GetNode("String/Eqp.img/Eqp"))
+                {
+                    var eqpNode = eqpCategory.GetNode(id.ToString());
+                    if (eqpNode != null)
+                    {
+                        return eqpNode.GetString(field);
+                    }
+                }
+
+                return "??? Unknown equip " + id + " ???";
+            }
+
+            if (type == StringType.Map)
+            {
+                // Maps have about the same as equips. There's a category....
+                foreach (var mapCategory in MainScriptNode.GetNode("String/Map.img"))
+                {
+                    var mapNode = mapCategory.GetNode(id.ToString());
+                    if (mapNode != null)
+                    {
+                        return mapNode.GetString(field);
+                    }
+                }
+                return "??? Unknown map " + id + " ???";
+            }
+
+
+            string mainNode = ".";
+            string idStr = null;
+            switch (type)
+            {
+                case StringType.Mob: mainNode = "Mob.img"; break;
+                case StringType.Skill:
+                    mainNode = "Skill.img";
+                    idStr = id.ToString("D7");
+                    break;
+                case StringType.Npc: mainNode = "Npc.img"; break;
+                case StringType.Item:
+                    {
+                        switch (category)
+                        {
+                            case 2: mainNode = "Consume.img"; break;
+                            case 3: mainNode = "Ins.img"; break;
+                            case 4: mainNode = "Etc.img/Etc"; break;
+                            case 5: mainNode = "Cash.img"; break;
+                        }
+                        break;
+                    }
+            }
+
+            var possibleNode = MainScriptNode.GetNode(string.Format("String/{0}/{1}", mainNode, idStr ?? id.ToString()));
+            if (possibleNode != null)
+                return possibleNode.GetString(field) ??
+                       ("??? Unknown field " + field + " for type " + type + ", " + id + " ???");
+            else
+                return "??? Unknown " + type + ", " + id + " ???";
+        }
 
         enum Phrase
         {
@@ -56,49 +145,74 @@ namespace MapleManager.Scripts.TextRenderer
         private void ParseText()
         {
 
-            var lines = AnalyzeText(txtIn.Text, false, true).ToList();
+            List<Line> lines;
             lbParseResults.Items.Clear();
             txtOut.Clear();
 
-            int curLine = 0;
-            foreach (var line in lines)
+            try
             {
-                lbParseResults.Items.Add(string.Format("{0} {1}, '{2}' {3} {4}", 
-                    line.font,
-                    line.fontSize, 
-                    line.text,
-                    line.color, line.bold));
+                lines = AnalyzeText(txtIn.Text.Replace("\\r", "\r").Replace("\\n", "\n"), false, true).ToList();
 
-                try
+                int curLine = 0;
+                foreach (var line in lines)
                 {
-                    txtOut.SelectionFont = new Font(line.font, line.fontSize,
-                        line.bold ? FontStyle.Bold : FontStyle.Regular);
-                }
-                catch
-                {
-                    txtOut.Clear();
-                    txtOut.Text = "Error while parsing font... " + line.font + ", size " + line.fontSize;
-                    break;
-                }
-                switch (line.color)
-                {
-                    case 0: txtOut.SelectionColor = Color.Black; break;
-                    case 1: txtOut.SelectionColor = Color.Red; break;
-                    case 2: txtOut.SelectionColor = Color.Green; break;
-                    case 3: txtOut.SelectionColor = Color.Blue; break;
-                    case 4: txtOut.SelectionColor = Color.White; break;
-                    case 5: txtOut.SelectionColor = Color.Violet; break;
-                    case 6: txtOut.SelectionColor = Color.Gray; break;
-                    case 7: txtOut.SelectionColor = Color.Yellow; break;
-                }
-                txtOut.SelectedText = line.text;
-                if (curLine != line.line)
-                {
-                    txtOut.SelectedText += "\r\n";
-                    curLine = line.line;
+                    lbParseResults.Items.Add(string.Format("{0} {1}, '{2}' {3} {4}",
+                        line.font,
+                        line.fontSize,
+                        line.text,
+                        line.color, line.bold));
+
+                    try
+                    {
+                        txtOut.SelectionFont = new Font(line.font, line.fontSize,
+                            line.bold ? FontStyle.Bold : FontStyle.Regular);
+                    }
+                    catch
+                    {
+                        txtOut.Clear();
+                        txtOut.Text = "Error while parsing font... " + line.font + ", size " + line.fontSize;
+                        break;
+                    }
+                    switch (line.color)
+                    {
+                        case 0:
+                            txtOut.SelectionColor = Color.Black;
+                            break;
+                        case 1:
+                            txtOut.SelectionColor = Color.Red;
+                            break;
+                        case 2:
+                            txtOut.SelectionColor = Color.Green;
+                            break;
+                        case 3:
+                            txtOut.SelectionColor = Color.Blue;
+                            break;
+                        case 4:
+                            txtOut.SelectionColor = Color.White;
+                            break;
+                        case 5:
+                            txtOut.SelectionColor = Color.Violet;
+                            break;
+                        case 6:
+                            txtOut.SelectionColor = Color.Gray;
+                            break;
+                        case 7:
+                            txtOut.SelectionColor = Color.Yellow;
+                            break;
+                    }
+                    txtOut.SelectedText = line.text;
+                    if (curLine != line.line)
+                    {
+                        txtOut.SelectedText += "\r\n";
+                        curLine = line.line;
+                    }
                 }
             }
-
+            catch (Exception ex)
+            {
+                txtOut.Clear();
+                txtOut.Text = ex.ToString();
+            }
         }
 
         /// <summary>
@@ -423,13 +537,13 @@ namespace MapleManager.Scripts.TextRenderer
                                             switch (phrase[1])
                                             {
                                                 case 'e': phrase = "(secret itemname " + no + ")"; break;
-                                                case 't': phrase = "(itemname " + no + ")"; break;
-                                                case 'z': phrase = "((old)itemname " + no + ")"; break;
-                                                case 'o': phrase = "(mobname " + no + ")"; break;
+                                                case 't': phrase = GetString(StringType.Item, no, "name"); break;
+                                                case 'z': phrase = GetString(StringType.Item, no, "name"); break; // Looks the same like 'T', but possibly older? It doesnt try to handle the unique 'unknown' itemid
+                                                case 'o': phrase = GetString(StringType.Mob, no, "name"); break;
                                                 case 'h': phrase = "(charname)"; break;
-                                                case 'p': phrase = "(npcname " + no + ")"; break;
-                                                case 'm': phrase = "(mapname " + no + ")"; break;
-                                                case 'q': phrase = "(skillname " + no + ")"; break;
+                                                case 'p': phrase = GetString(StringType.Npc, no, "name"); break;
+                                                case 'm': phrase = GetString(StringType.Map, no, "mapName"); break;
+                                                case 'q': phrase = GetString(StringType.Skill, no, "name"); break;
                                                 case 'c': phrase = "(itemcount " + no + ")"; break;
                                                 case 'a': phrase = "(QuestMobCount " + no + ")"; break;
                                                 case 'M': phrase = "(QuestMobName " + no + ")"; break;
@@ -468,6 +582,34 @@ namespace MapleManager.Scripts.TextRenderer
         private void txtIn_TextChanged(object sender, EventArgs e)
         {
             ParseText();
+        }
+
+
+
+        private void cbClickDetect_CheckedChanged(object sender, EventArgs e)
+        {
+            Program.MainForm.tvData.AfterSelect -= TvDataOnAfterSelect;
+            if (cbClickDetect.Checked)
+            {
+                Program.MainForm.tvData.AfterSelect += TvDataOnAfterSelect;
+            }
+            
+        }
+
+        private void TvDataOnAfterSelect(object sender, TreeViewEventArgs treeViewEventArgs)
+        {
+            var wtn = treeViewEventArgs.Node as WZTreeNode;
+            if (wtn == null) return;
+
+            var str = wtn.WzObject as string;
+            if (str != null)
+            {
+                if (str.Contains('#'))
+                {
+                    txtIn.Text = str;
+                    ParseText();
+                }
+            }
         }
     }
 }

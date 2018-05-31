@@ -29,19 +29,9 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            this.btnExportGif = new System.Windows.Forms.Button();
             this.SuspendLayout();
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.BackColor = System.Drawing.Color.Transparent;
-            this.pictureBox1.Location = new System.Drawing.Point(12, 12);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(100, 50);
-            this.pictureBox1.TabIndex = 0;
-            this.pictureBox1.TabStop = false;
             // 
             // timer1
             // 
@@ -49,24 +39,34 @@
             this.timer1.Interval = 10;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
+            // btnExportGif
+            // 
+            this.btnExportGif.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnExportGif.Location = new System.Drawing.Point(444, 12);
+            this.btnExportGif.Name = "btnExportGif";
+            this.btnExportGif.Size = new System.Drawing.Size(75, 23);
+            this.btnExportGif.TabIndex = 1;
+            this.btnExportGif.Text = "Export GIF";
+            this.btnExportGif.UseVisualStyleBackColor = true;
+            this.btnExportGif.Click += new System.EventHandler(this.btnExportGif_Click);
+            // 
             // AnimationForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(531, 365);
-            this.Controls.Add(this.pictureBox1);
+            this.Controls.Add(this.btnExportGif);
             this.Name = "AnimationForm";
             this.Text = "AnimationForm";
             this.Load += new System.EventHandler(this.AnimationForm_Load);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.AnimationForm_Paint);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            this.Resize += new System.EventHandler(this.AnimationForm_Resize);
             this.ResumeLayout(false);
 
         }
 
         #endregion
-
-        private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Button btnExportGif;
     }
 }
