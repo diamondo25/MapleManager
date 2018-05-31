@@ -33,6 +33,7 @@
             this.lbParseResults = new System.Windows.Forms.ListBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.cbClickDetect = new System.Windows.Forms.CheckBox();
+            this.btnOpenScriptFormatInfo = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -102,11 +103,24 @@
             this.cbClickDetect.UseVisualStyleBackColor = true;
             this.cbClickDetect.CheckedChanged += new System.EventHandler(this.cbClickDetect_CheckedChanged);
             // 
+            // btnOpenScriptFormatInfo
+            // 
+            this.btnOpenScriptFormatInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnOpenScriptFormatInfo.Location = new System.Drawing.Point(583, 8);
+            this.btnOpenScriptFormatInfo.Name = "btnOpenScriptFormatInfo";
+            this.btnOpenScriptFormatInfo.Size = new System.Drawing.Size(105, 23);
+            this.btnOpenScriptFormatInfo.TabIndex = 5;
+            this.btnOpenScriptFormatInfo.Text = "Script format info";
+            this.btnOpenScriptFormatInfo.UseVisualStyleBackColor = true;
+            this.btnOpenScriptFormatInfo.Click += new System.EventHandler(this.btnOpenScriptFormatInfo_Click);
+            // 
             // TextRenderForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(700, 478);
+            this.Controls.Add(this.btnOpenScriptFormatInfo);
             this.Controls.Add(this.cbClickDetect);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.lbParseResults);
@@ -130,5 +144,6 @@
         private System.Windows.Forms.ListBox lbParseResults;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.CheckBox cbClickDetect;
+        private System.Windows.Forms.Button btnOpenScriptFormatInfo;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using MapleManager.Controls;
@@ -275,6 +276,25 @@ namespace MapleManager
             }
 
             throw new Exception($"Not sure how to convert '{Object}' into an UInt64");
+        }
+
+        public string GetString()
+        {
+            if (Object is string str) return str;
+            if (!(Object is PcomObject))
+                return ToUInt64().ToString();
+            return null;
+        }
+
+        public Image GetImage()
+        {
+            if (Object is WzImage img) return img.Tile;
+            return null;
+        }
+
+        public WzImage GetImageNode()
+        {
+            return Object as WzImage;
         }
 
         public override string ToString()

@@ -195,7 +195,7 @@ namespace MapleManager
             anim.Start(_mainScriptNode);
 
             var tr = new TextRenderScript();
-            //tr.Start(_mainScriptNode);
+            tr.Start(_mainScriptNode);
 
             if (string.IsNullOrEmpty(Settings.Default.SelectedNode) == false)
             {
@@ -203,6 +203,8 @@ namespace MapleManager
                 node?.EnsureVisible();
                 tvData.SelectedNode = node;
             }
+
+            scDataTreeAndContent.SplitterDistance = Math.Max(Settings.Default.TVSplitterPos, 100);
         }
 
 
@@ -665,6 +667,16 @@ namespace MapleManager
             {
                 pbNodeImage.Image.Save(sfd.FileName, ImageFormat.Png);
             }
+        }
+
+        private void scDataTreeAndContent_SplitterMoved(object sender, SplitterEventArgs e)
+        {
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Settings.Default.TVSplitterPos = scDataTreeAndContent.SplitterDistance;
+            Settings.Default.Save();
         }
     }
 }

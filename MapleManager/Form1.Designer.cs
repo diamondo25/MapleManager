@@ -46,15 +46,13 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.pbNodeImage = new System.Windows.Forms.PictureBox();
             this.btnGoToUOL = new System.Windows.Forms.Button();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.treeView1 = new System.Windows.Forms.TreeView();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.wZToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiLoadDirectory = new System.Windows.Forms.ToolStripMenuItem();
             this.extractWZToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fileToolStripSeperator = new System.Windows.Forms.ToolStripSeparator();
             this.modifyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.cutToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
@@ -77,7 +75,6 @@
             this.cutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pasteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fullyLoadThisToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.fileToolStripSeperator = new System.Windows.Forms.ToolStripSeparator();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.scDataTreeAndContent)).BeginInit();
@@ -90,10 +87,6 @@
             this.scTextBoxes.SuspendLayout();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbNodeImage)).BeginInit();
-            this.tabPage2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
-            this.splitContainer2.Panel1.SuspendLayout();
-            this.splitContainer2.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.cmsDirectory.SuspendLayout();
@@ -102,7 +95,6 @@
             // tabControl1
             // 
             this.tabControl1.Controls.Add(this.tabPage1);
-            this.tabControl1.Controls.Add(this.tabPage2);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 24);
             this.tabControl1.Name = "tabControl1";
@@ -130,6 +122,7 @@
             // scDataTreeAndContent.Panel1
             // 
             this.scDataTreeAndContent.Panel1.Controls.Add(this.tvData);
+            this.scDataTreeAndContent.Panel1MinSize = 100;
             // 
             // scDataTreeAndContent.Panel2
             // 
@@ -141,6 +134,7 @@
             this.scDataTreeAndContent.SplitterDistance = 158;
             this.scDataTreeAndContent.SplitterWidth = 10;
             this.scDataTreeAndContent.TabIndex = 0;
+            this.scDataTreeAndContent.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.scDataTreeAndContent_SplitterMoved);
             // 
             // tvData
             // 
@@ -185,11 +179,11 @@
             // 
             this.scTextBoxes.Panel2.Controls.Add(this.txtInfoBoxNormalized);
             this.scTextBoxes.Panel2.Controls.Add(this.label2);
-            this.scTextBoxes.Size = new System.Drawing.Size(697, 214);
-            this.scTextBoxes.SplitterDistance = 348;
+            this.scTextBoxes.Size = new System.Drawing.Size(702, 214);
+            this.scTextBoxes.SplitterDistance = 350;
             this.scTextBoxes.TabIndex = 6;
             // 
-            // textBox1
+            // txtInfoBox
             // 
             this.txtInfoBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -198,7 +192,7 @@
             this.txtInfoBox.Name = "txtInfoBox";
             this.txtInfoBox.ReadOnly = true;
             this.txtInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtInfoBox.Size = new System.Drawing.Size(342, 195);
+            this.txtInfoBox.Size = new System.Drawing.Size(344, 195);
             this.txtInfoBox.TabIndex = 0;
             // 
             // label1
@@ -210,7 +204,7 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "Raw:";
             // 
-            // textBox2
+            // txtInfoBoxNormalized
             // 
             this.txtInfoBoxNormalized.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -219,7 +213,7 @@
             this.txtInfoBoxNormalized.Name = "txtInfoBoxNormalized";
             this.txtInfoBoxNormalized.ReadOnly = true;
             this.txtInfoBoxNormalized.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtInfoBoxNormalized.Size = new System.Drawing.Size(339, 195);
+            this.txtInfoBoxNormalized.Size = new System.Drawing.Size(342, 195);
             this.txtInfoBoxNormalized.TabIndex = 1;
             // 
             // label2
@@ -239,9 +233,9 @@
             this.panel1.AutoScroll = true;
             this.panel1.BackgroundImage = global::MapleManager.Properties.Resources.image_bg;
             this.panel1.Controls.Add(this.pbNodeImage);
-            this.panel1.Location = new System.Drawing.Point(2, 252);
+            this.panel1.Location = new System.Drawing.Point(3, 252);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(699, 254);
+            this.panel1.Size = new System.Drawing.Size(702, 254);
             this.panel1.TabIndex = 5;
             // 
             // pbNodeImage
@@ -249,7 +243,7 @@
             this.pbNodeImage.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pbNodeImage.Location = new System.Drawing.Point(0, 0);
             this.pbNodeImage.Name = "pbNodeImage";
-            this.pbNodeImage.Size = new System.Drawing.Size(699, 254);
+            this.pbNodeImage.Size = new System.Drawing.Size(702, 254);
             this.pbNodeImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pbNodeImage.TabIndex = 0;
             this.pbNodeImage.TabStop = false;
@@ -263,38 +257,6 @@
             this.btnGoToUOL.Text = "Go to reference of UOL";
             this.btnGoToUOL.UseVisualStyleBackColor = true;
             this.btnGoToUOL.Click += new System.EventHandler(this.btnGoToUOL_Click);
-            // 
-            // tabPage2
-            // 
-            this.tabPage2.Controls.Add(this.splitContainer2);
-            this.tabPage2.Location = new System.Drawing.Point(4, 22);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(884, 515);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Maps";
-            this.tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // splitContainer2
-            // 
-            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.Location = new System.Drawing.Point(3, 3);
-            this.splitContainer2.Name = "splitContainer2";
-            // 
-            // splitContainer2.Panel1
-            // 
-            this.splitContainer2.Panel1.Controls.Add(this.treeView1);
-            this.splitContainer2.Size = new System.Drawing.Size(878, 509);
-            this.splitContainer2.SplitterDistance = 291;
-            this.splitContainer2.TabIndex = 0;
-            // 
-            // treeView1
-            // 
-            this.treeView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.treeView1.Location = new System.Drawing.Point(0, 0);
-            this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(291, 509);
-            this.treeView1.TabIndex = 0;
             // 
             // menuStrip1
             // 
@@ -324,7 +286,7 @@
             this.wZToolStripMenuItem,
             this.tsmiLoadDirectory});
             this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
-            this.loadToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.loadToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
             this.loadToolStripMenuItem.Text = "Load";
             // 
             // wZToolStripMenuItem
@@ -344,9 +306,14 @@
             // extractWZToolStripMenuItem
             // 
             this.extractWZToolStripMenuItem.Name = "extractWZToolStripMenuItem";
-            this.extractWZToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.extractWZToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
             this.extractWZToolStripMenuItem.Text = "Extract WZ";
             this.extractWZToolStripMenuItem.Click += new System.EventHandler(this.extractWZToolStripMenuItem_Click);
+            // 
+            // fileToolStripSeperator
+            // 
+            this.fileToolStripSeperator.Name = "fileToolStripSeperator";
+            this.fileToolStripSeperator.Size = new System.Drawing.Size(127, 6);
             // 
             // modifyToolStripMenuItem
             // 
@@ -511,11 +478,6 @@
             this.fullyLoadThisToolStripMenuItem.Text = "Fully load this";
             this.fullyLoadThisToolStripMenuItem.Click += new System.EventHandler(this.fullyLoadThisToolStripMenuItem_Click);
             // 
-            // fileToolStripSeperator
-            // 
-            this.fileToolStripSeperator.Name = "fileToolStripSeperator";
-            this.fileToolStripSeperator.Size = new System.Drawing.Size(149, 6);
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -528,6 +490,7 @@
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Form1";
             this.Text = "MapleManager";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
@@ -543,10 +506,6 @@
             this.scTextBoxes.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pbNodeImage)).EndInit();
-            this.tabPage2.ResumeLayout(false);
-            this.splitContainer2.Panel1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
-            this.splitContainer2.ResumeLayout(false);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
@@ -562,7 +521,6 @@
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.SplitContainer scDataTreeAndContent;
-        private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem validateToolStripMenuItem;
@@ -574,8 +532,6 @@
         private System.Windows.Forms.ToolStripMenuItem loadToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem wZToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem tsmiLoadDirectory;
-        private System.Windows.Forms.SplitContainer splitContainer2;
-        private System.Windows.Forms.TreeView treeView1;
         private System.Windows.Forms.ToolStripMenuItem extractWZToolStripMenuItem;
         private System.Windows.Forms.ContextMenuStrip cmsPropNode;
         private System.Windows.Forms.ToolStripMenuItem modifyToolStripMenuItem;
