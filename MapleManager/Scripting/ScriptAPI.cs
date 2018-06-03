@@ -27,7 +27,10 @@ namespace MapleManager
         public UInt64 GetUInt64(string path) => GetNode(path).ToUInt64();
 
         public string GetString(string path) => GetNode(path).ToString();
+        public Image GetImage(string path) => GetNode(path).GetImage();
         public abstract WZTreeNode TryGetTreeNode();
+
+        public abstract string GetFullPath();
 
         public abstract IEnumerator<ScriptNode> GetEnumerator();
 
@@ -85,6 +88,13 @@ namespace MapleManager
         {
             if (_obj is NameSpaceFile nsf) return nsf.TreeNode;
             if (Object is PcomObject po) return po.TreeNode;
+            return null;
+        }
+
+        public override string GetFullPath()
+        {
+            var wtn = TryGetTreeNode();
+            if (wtn != null) return wtn.FullPath;
             return null;
         }
 

@@ -235,13 +235,37 @@ namespace MapleManager.Scripts.TextRenderer
             return str ?? "??? Not a string " + path + " ???";
         }
 
+        private Image GetEquipmentImage(int id, string iconName = "iconRaw")
+        {
+            var str = id.ToString("D8") + ".img";
+            foreach (var node in MainScriptNode["Character"])
+            {
+                if (node.Name.EndsWith(".img")) continue;
+                Console.WriteLine("{0}", node.Name);
+                var x = node[str];
+                if (x == null) continue;
+                var subNodePath = "info/" + iconName;
+                var img = x.GetImage(subNodePath);
+
+                if (img == null)
+                {
+                    Console.WriteLine("Found the correct node {0}, but not {1}", x.GetFullPath(), subNodePath);
+                    continue;
+                }
+
+                return img;
+            }
+
+            return null;
+        }
+
         private Image GetItemImage(int id, string iconName = "iconRaw")
         {
             int inv = id / 1000000;
             if (inv == 1)
             {
                 // Eh... I'm not gonna fetch this right now.
-                return null;
+                return GetEquipmentImage(id, iconName);
             }
 
             int category = id / 10000;
@@ -265,7 +289,7 @@ namespace MapleManager.Scripts.TextRenderer
         private Image GetSkillImage(int id, string iconName = "icon")
         {
             int job = id / 10000;
-            var path = string.Format("Skill/{1:D3}.img/skill/{2}/{3}", job, id, iconName);
+            var path = string.Format("Skill/{0:D3}.img/skill/{1}/{2}", job, id, iconName);
             return GetImage(path);
         }
 
@@ -495,7 +519,13 @@ namespace MapleManager.Scripts.TextRenderer
 
         private static Phrase GetPhraseType(string phrase)
         {
-            if (phrase.Length < 2 || phrase[0] != '#') return Phrase.None;
+            if (phrase.Length < 2 || phrase[0] != '#')
+            {
+#if TRACE_PHRASE
+                Console.WriteLine("Phrase None: {0}", phrase);
+#endif
+                return Phrase.None;
+            }
 
             switch (phrase[1])
             {
@@ -506,7 +536,13 @@ namespace MapleManager.Scripts.TextRenderer
                 case 'w': return Phrase.Reward;
             }
 
-            if (phrase.Length <= 2) return Phrase.None;
+            if (phrase.Length <= 2)
+            {
+#if TRACE_PHRASE
+                Console.WriteLine("Phrase None (2): {0}", phrase);
+#endif
+                return Phrase.None;
+            }
 
             var phraseWithoutHash = phrase.Substring(1);
             if (phraseWithoutHash.StartsWith("questorder"))
@@ -536,25 +572,27 @@ namespace MapleManager.Scripts.TextRenderer
             if (phrase.Contains("MD") && phrase.Length > 3)
                 return Phrase.MirrorDungeon;
 
-
+            var phraseType = Phrase.Text;
             switch (phrase[1])
             {
-                case 'L': return Phrase.List;
+                case 'L': phraseType = Phrase.List; break;
                 case 'i':
-                case 'v': return Phrase.ItemIcon;
-                case 'e': return Phrase.ItemIcon_Secret;
-                case 's': return Phrase.SkillIcon;
+                case 'v': phraseType = Phrase.ItemIcon; break;
+                case 'e': phraseType = Phrase.ItemIcon_Secret; break;
+                case 's': phraseType = Phrase.SkillIcon; break;
                 case 'f':
-                case 'F': return Phrase.Canvas;
-                case 'B': return Phrase.Canvas_ProgressBar;
-                case 'j': return Phrase.PartyQuestKeyword;
-                case 'Q': return Phrase.TimeLimitQuest;
-                case 'D': return Phrase.DailyPlayQuest;
-                case 'W': return Phrase.QuestSummary;
-
+                case 'F': phraseType = Phrase.Canvas; break;
+                case 'B': phraseType = Phrase.Canvas_ProgressBar; break;
+                case 'j': phraseType = Phrase.PartyQuestKeyword; break;
+                case 'Q': phraseType = Phrase.TimeLimitQuest; break;
+                case 'D': phraseType = Phrase.DailyPlayQuest; break;
+                case 'W': phraseType = Phrase.QuestSummary; break;
             }
 
-            return Phrase.Text;
+#if TRACE_PHRASE
+            Console.WriteLine("Phrase {1}: {0}", phrase, phraseType);
+#endif
+            return phraseType;
         }
 
         public struct Line
@@ -573,20 +611,23 @@ namespace MapleManager.Scripts.TextRenderer
         {
             string phrase = "";
 
-
-            GetPhrase(ref input, ref phrase);
             int color = isWhiteBased ? 4 : 0;
             bool bold = false;
             int select = -1;
-            int phraseType = 0;
             int curLine = 0;
             int fontSize = 8;
             string font = "arial";
             string extraInfo = null;
             Image img = null;
 
-            while (phrase != "")
+            while (true)
             {
+                GetPhrase(ref input, ref phrase);
+#if TRACE_PHRASE
+                Console.WriteLine("Phrase: {0} from {1}", phrase, input);
+#endif
+                if (phrase == "") break;
+
                 switch (phrase)
                 {
                     case "\r":
@@ -604,6 +645,7 @@ namespace MapleManager.Scripts.TextRenderer
                     case "#Cviolet":
                     case "#d": color = 5; break;
                     case "#Cgray":
+                    // #y is conflicting with Quest status, this one is ignored.
                     case "#y": color = 6; break;
                     case "#Cyellow": color = 7; break;
 
@@ -616,8 +658,12 @@ namespace MapleManager.Scripts.TextRenderer
                         {
                             if (parsePhraseType)
                             {
+                                var phraseType = GetPhraseType(phrase);
+#if TRACE_PHRASE
+                                Console.WriteLine("Parsing phraseType {0} from {1}", phraseType, phrase);
+#endif
                                 // Do more stuff
-                                switch (GetPhraseType(phrase))
+                                switch (phraseType)
                                 {
                                     case Phrase.FontSize:
                                         {
@@ -646,17 +692,21 @@ namespace MapleManager.Scripts.TextRenderer
 
                                     case Phrase.ItemIcon_Secret:
                                         extraInfo = "Secret item " + GetParameterNo(phrase);
+                                        // Conflicting with the bold toggle, this one is ignored
                                         phrase = "";
                                         img = GetItemImage(3800088);
                                         break;
+
                                     case Phrase.SkillIcon:
                                         extraInfo = "Skill icon " + GetParameterNo(phrase);
                                         img = GetSkillImage(GetParameterNo(phrase));
                                         phrase = "";
                                         break;
+
                                     case Phrase.Canvas:
-                                        // #F UI/MapleTV.img/TVon/0#
-                                        phrase = phrase.Substring(3);
+                                    case Phrase.Canvas_Outline:
+                                        // #FUI/MapleTV.img/TVon/0#
+                                        phrase = phrase.Substring(2);
                                         extraInfo = "Canvas " + phrase;
                                         img = GetImage(phrase);
                                         if (img == null)
@@ -668,23 +718,46 @@ namespace MapleManager.Scripts.TextRenderer
                                             phrase = "";
                                         }
                                         break;
+
                                     case Phrase.Canvas_ProgressBar:
-                                        phrase = "(progress bar " + GetParameterNo(phrase) + ")";
-                                        break;
+                                        {
+                                            extraInfo = "(progress bar " + GetParameterNo(phrase) + ")";
+                                            // this one requires explicit rendering of the image
 
+                                            var basePath = "UI/Login.img/Notice/Loading/bar/";
+                                            var baseImage = GetImage(basePath + "10");
 
+                                            img = new Bitmap(baseImage);
+                                            var g = Graphics.FromImage(img);
 
+                                            var percentage = GetParameterNo(phrase);
+                                            percentage = Math.Max(0, Math.Min(percentage, 100));
 
+                                            g.DrawImageUnscaled(GetImage(basePath + (percentage / 10)), 0, 0);
+                                            phrase = "";
+
+                                            break;
+                                        }
+
+                                    case Phrase.PartyQuestKeyword:
+                                        {
+                                            // This thing is huge.
+                                            phrase = "(party quest keyword...)";
+                                            break;
+                                        }
 
                                     case Phrase.Text:
                                         {
                                             var no = GetParameterNo(phrase);
                                             switch (phrase[1])
                                             {
+
                                                 case 'e':
+                                                    // Conflicts with bold toggle, not handled.
                                                     extraInfo = "Secret item name " + no;
                                                     phrase = "(secret itemname " + no + ")";
                                                     break;
+
                                                 case 't': phrase = GetString(StringType.Item, no); break;
                                                 case 'z': phrase = GetString(StringType.Item, no); break;
                                                 case 'o': phrase = GetString(StringType.Mob, no); break;
@@ -837,10 +910,6 @@ namespace MapleManager.Scripts.TextRenderer
                             break;
                         }
                 }
-
-
-                // Next phrase
-                GetPhrase(ref input, ref phrase);
             }
         }
     }

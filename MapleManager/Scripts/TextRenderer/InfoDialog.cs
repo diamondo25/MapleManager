@@ -45,9 +45,10 @@ namespace MapleManager.Scripts.TextRenderer
 #d sets the font color to violet (alias: #Cviolet)
 #y sets the font color to gray (alias: #Cgray)
 
-#y might not work, as its also used for Quest info...
+Gray used to be configurable through #y, but due to it being Nexon'd,
+causing it to be bount to Quest Info, you have to use #Cgray# in some versions.
+Yellow is not configurable through a single character, use #Cyellow# .
 
-Its not possible to set the color yellow through a single character, use #Cyellow
 
 ", @"
 #rRed
@@ -70,7 +71,16 @@ There are color aliases you can use:
 - Cblue
 - Cviolet
 - Cgray
-- Cyellow (not actually an alias, the only way you can make the text yellow)
+- Cyellow
+
+Yellow and Gray are only configurable through this.
+", @"
+#Cred#Red
+#Cgreen#Green
+#Cblue#Blue
+#Cviolet#Violet
+#Cgray#Gray
+#Cyellow#Yellow
 ");
 
             AddElement("#h - Player name",
@@ -80,37 +90,77 @@ Format: #h(|1|2|3)#
 
 Will show the character name.
 There's an additional option, if one would append either 1, 2 or 3 after '#h'.
-This is used for Korean name formatting.
+This is used for Korean grammar.
 #h1# will 'Add Josa EUN'
 #h2# will 'Add Josa I'
 #h3# will 'Add Josa EUL'
 ");
+
             AddElement("#e - Render (hidden) quest item",
                 @"
-Format: #e(?<questid>[0-9]+)(?<num>[0-9])#
+Format: #e(?<questid>[0-9]+)(?<num>[1-9])#
 - num is only 1 digit, and is the index of the demanded/required item to complete the quest.
+
+This function is broken, as it conflicts with #e for bold.
 
 If the player doesn't know about the item (the item is not in his inventory), it will render 
 as item 3800088.
 Otherwise, it will just show the item like #t would, except the itemid is fetched
 from CheckSecretItemID (returning either 3800088 or the Quest Item ID)
-", "#e100080#");
+", "#e10051#");
 
             AddElement("#v #i #z #t - Render regular item",
                 @"
 Format: #(v|i|z|t)(?<itemid>[0-9]+)#
 
+#v and #i will render the item icon.
+#z and #t will render the item name.
 
+", @"
+#v1010000# 
+#i1010000#
+#z1010000# 
+#t1010000#
 ");
 
             AddElement("#F - Canvas reference", 
                 @"
-Format: #F (?<UOL>[^#]+)#
+Format: #F(?<UOL>[^#\\\r]+)#
 
 Include a canvas image inside the text.
 This can be anywhere inside the datafiles, the path supplied is absolute.
 ", @"
-#F UI/UIWindow.img/Stat/backgrnd#
+#FUI/UIWindow.img/Stat/backgrnd#
+");
+
+            AddElement("#B - Progress bar",
+                @"
+Format: #B(?<percentage>(?:[0-9]{1,2}|100))#
+
+Draws the progress bar used inside the channel select screen.
+The only place I recall it being used is due to the events where you had to
+collect maple leaves and trade them in. Everytime the bar was full, an event
+happened.
+", @"
+#B0#
+#B10#
+#B20#
+#B30#
+#B40#
+#B50#
+#B60#
+#B70#
+#B80#
+#B90#
+");
+
+
+            AddElement("#q #s - Skill icon and name",
+                @"
+Format: #(q|s)(?<skillid>[0-9]+)#
+
+", @"
+#s1100000# #q1100000#
 ");
 
             AddElement("#a #M #x - Quest mob info",
@@ -144,6 +194,7 @@ Format: #Q(?<questid>[0-9]+)#
 -- CURRENTLY NOT SUPPORTED --
 Inserts the mate name of the Quest ID, whatever that means.
 Not part of KMST client.
+Seems to be used by a quest with ID 4451, when rendering the Quest UI...
 ");
 
 
