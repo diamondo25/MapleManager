@@ -21,3 +21,8 @@ Does not support:
 - Saving .img files back to disk (TODO)
 - Sounds
 - ASCII Property nodes
+
+## Images
+
+![NPC script explanation](https://i.craftnet.nl/MapleManager_2018-05-31_21-50-39.png)
+![Testing NPC script processing](https://i.craftnet.nl/MapleManager_2018-05-31_14-34-13.png)
