@@ -22,9 +22,14 @@ Does not support:
 - ASCII Property nodes
 
 ## Checking out
+
+As we include AnimatedGif through a submodule, we need to check out. You can do it directly through:
 ```
-git clone git@github.com:diamondo25/MapleManager.git
-cd MapleManager
+git clone --recursive git@github.com:diamondo25/MapleManager.git 
+```
+
+Or manually after cloning:
+```
 git submodule update --init
 ```
 
