@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using MapleManager.WzTools.Package;
 
 namespace MapleManager.WzTools.Helpers
 {
@@ -61,12 +62,15 @@ namespace MapleManager.WzTools.Helpers
 
             byte[] bytes;
 
-            if (unicode)
-                bytes = Encoding.Unicode.GetBytes(value);
-            else
-                bytes = Encoding.ASCII.GetBytes(value);
+            var encoding = unicode ? Encoding.Unicode : Encoding.ASCII;
 
-            return bytes.ApplyStringXor(unicode);
+            bytes = encoding.GetBytes(value);
+
+            WzEncryption.ApplyCrypto(bytes);
+
+            bytes = bytes.ApplyStringXor(unicode);
+
+            return bytes;
         }
     }
 }

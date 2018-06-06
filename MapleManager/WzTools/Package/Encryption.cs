@@ -202,15 +202,18 @@ namespace MapleManager.WzTools.Package
             }
         }
 
+        private static void TrySetNopAsDefault()
+        {
+            if (currentEncryption != null) return;
+            currentEncryption = nopEncryption;
+            PutCurrentInFront();
+        }
+
         public static void TryDecryptString(byte[] contents, Func<byte[], bool> validate)
         {
             if (validate != null && validate(contents))
             {
-                if (currentEncryption == null)
-                {
-                    currentEncryption = nopEncryption;
-                    PutCurrentInFront();
-                }
+                TrySetNopAsDefault();
                 return;
             }
 
@@ -238,6 +241,12 @@ namespace MapleManager.WzTools.Package
             }
 
             Console.WriteLine("No crypto found for string!");
+        }
+
+        public static void ApplyCrypto(byte[] contents)
+        {
+            TrySetNopAsDefault();
+            currentEncryption.Encrypt(contents);
         }
     }
 }

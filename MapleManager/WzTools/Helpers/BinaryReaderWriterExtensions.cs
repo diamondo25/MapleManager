@@ -125,15 +125,8 @@ namespace MapleManager.WzTools
             int actualLen;
             if (len == -128) actualLen = reader.ReadInt32();
             else actualLen = -len;
-
-            byte mask = 0xAA;
-            var bytes = reader.ReadBytes(actualLen);
-
-            for (var i = 0; i < actualLen; i++)
-            {
-                bytes[i] ^= mask;
-                mask++;
-            }
+            
+            var bytes = reader.ReadBytes(actualLen).ApplyStringXor(false);
 
             WzEncryption.TryDecryptString(bytes, y => !y.Any(x => x < 0x20 && x != '\n' && x != '\r' && x != '\t'));
             
@@ -146,19 +139,11 @@ namespace MapleManager.WzTools
             if (len == 127) actualLen = reader.ReadInt32();
             actualLen *= 2;
 
-            ushort mask = 0xAAAA;
-            var bytes = reader.ReadBytes(actualLen);
-            for (var i = 0; i < actualLen; i += 2)
-            {
-                bytes[i + 0] ^= (byte)(mask & 0xFF);
-                bytes[i + 1] ^= (byte)((mask >> 8) & 0xFF);
-                mask++;
-            }
+            var bytes = reader.ReadBytes(actualLen).ApplyStringXor(true);
 
             WzEncryption.TryDecryptString(bytes, null);
 
             return Encoding.Unicode.GetString(bytes);
         }
-        
     }
 }

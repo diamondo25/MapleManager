@@ -739,6 +739,19 @@ namespace MapleManager.Scripts.TextRenderer
                                             break;
                                         }
 
+                                    case Phrase.QuestSummary:
+                                        {
+                                            var str = phrase.Substring(2);
+                                            if (str.Length != 0)
+                                            {
+                                                img = GetImage("UI/UIWindow2.img/Quest/quest_info/summary_icon/" + str);
+                                            }
+
+                                            phrase = "";
+                                            break;
+                                        }
+
+
                                     case Phrase.PartyQuestKeyword:
                                         {
                                             // This thing is huge.

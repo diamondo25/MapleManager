@@ -209,12 +209,15 @@ namespace MapleManager.WzTools.Objects
                         arr = ARGB16toARGB32(outputStream, uncompressedSize);
                         break;
                     case WzPixFormat.DXT5:
-                        arr = DXTDecoder.Decode(TileWidth, TileHeight, outputStream.ToArray(),
-                            DXTDecoder.CompressionType.DXT5);
-                        break;
                     case WzPixFormat.DXT3:
-                        arr = DXTDecoder.Decode(TileWidth, TileHeight, outputStream.ToArray(),
-                            DXTDecoder.CompressionType.DXT3);
+                        arr = DXTDecoder.Decode(
+                            TileWidth,
+                            TileHeight,
+                            outputStream.ToArray(),
+                            PixFormat == WzPixFormat.DXT3 ?
+                            DXTDecoder.CompressionType.DXT3 :
+                            DXTDecoder.CompressionType.DXT5
+                        );
                         break;
                     default:
                         arr = outputStream.ToArray();
@@ -223,8 +226,7 @@ namespace MapleManager.WzTools.Objects
 
 
                 PixelFormat format;
-
-                // TODO: Figure out why some images are not transparent
+                
                 switch (PixFormat)
                 {
                     case WzPixFormat.R5G6B5:
@@ -241,7 +243,8 @@ namespace MapleManager.WzTools.Objects
                 var rect = new Rectangle(0, 0, output.Width, output.Height);
                 var bmpData = output.LockBits(rect, ImageLockMode.ReadWrite, output.PixelFormat);
 
-                // Row-by-row copy
+                // Apply MipMap stuff
+                
                 var arrRowLength = rect.Width * Image.GetPixelFormatSize(output.PixelFormat) / 8;
                 var ptr = bmpData.Scan0;
                 for (var i = 0; i < rect.Height; i++)
@@ -251,11 +254,7 @@ namespace MapleManager.WzTools.Objects
                 }
 
                 output.UnlockBits(bmpData);
-
-                if (PixFormat == WzPixFormat.DXT3 || PixFormat == WzPixFormat.DXT5)
-                {
-                    //output.Save(@"C:\Users\Erwin\Documents\visual studio 2017\Projects\MapleManager\" + PixFormat + ".png", ImageFormat.Png);
-                }
+                
                 Tile = output;
             }
         }
