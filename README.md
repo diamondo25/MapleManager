@@ -25,7 +25,7 @@ Does not support:
 
 As we include AnimatedGif through a submodule, we need to check out. You can do it directly through:
 ```
-git clone --recursive git@github.com:diamondo25/MapleManager.git 
+git clone --recursive git@github.com:diamondo25/MapleManager.git
 ```
 
 Or manually after cloning:
@@ -36,5 +36,6 @@ git submodule update --init
 
 ## Images
 
-![NPC script explanation](https://i.craftnet.nl/MapleManager_2018-05-31_21-50-39.png)
-![Testing NPC script processing](https://i.craftnet.nl/MapleManager_2018-05-31_14-34-13.png)
+![Main form](https://raw.githubusercontent.com/diamondo25/MapleManager/master/readme-images/main-form.png)
+![NPC script explanation](https://raw.githubusercontent.com/diamondo25/MapleManager/master/readme-images/info-dialog.png)
+![Texting NPC script processing](https://raw.githubusercontent.com/diamondo25/MapleManager/master/readme-images/text-render-form.png)
