@@ -2,7 +2,6 @@
 
 _Your extensible maple data manager._
 
-
 Supports:
 - deMSwZ-style WZ processing, ignoring WZ package key
 - WZ package key bruteforcing for WZ files that use a version number as package key (all official ones)
@@ -21,6 +20,14 @@ Does not support:
 - Saving .img files back to disk (TODO)
 - Sounds
 - ASCII Property nodes
+
+## Checking out
+```
+git clone git@github.com:diamondo25/MapleManager.git
+cd MapleManager
+git submodule update --init
+```
+
 
 ## Images
 
