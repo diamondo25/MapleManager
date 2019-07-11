@@ -3,6 +3,7 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -12,12 +13,13 @@ using MapleManager.Scripts;
 using MapleManager.Scripts.Animator;
 using MapleManager.WzTools;
 using MapleManager.WzTools.FileSystem;
+using MapleManager.WzTools.Helpers;
 using MapleManager.WzTools.Objects;
 using MapleManager.WzTools.Package;
 
 namespace MapleManager
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         private Dictionary<string, WZTreeNode> Root { get; set; } = new Dictionary<string, WZTreeNode>()
         {
@@ -41,7 +43,7 @@ namespace MapleManager
 
         private ScriptNode _mainScriptNode { get; }
 
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
             ResetTree();
@@ -347,6 +349,8 @@ namespace MapleManager
             }
         }
 
+
+        private string LoadedFolderPath = "";
         private void LoadContentsOfFolder(string folder)
         {
             if (!Directory.Exists(folder)) return;
@@ -358,6 +362,8 @@ namespace MapleManager
             EndTreeUpdate();
 
             AddLastDir(folder);
+            LoadedFolderPath = folder;
+            openFolderInExplorerToolStripMenuItem.Visible = true;
         }
 
         private void LoadContentsSmart(WzNameSpace ns)
@@ -677,6 +683,122 @@ namespace MapleManager
         {
             Settings.Default.TVSplitterPos = scDataTreeAndContent.SplitterDistance;
             Settings.Default.Save();
+        }
+
+        void WriteFile(string path, string fileName, string contents)
+        {
+            File.WriteAllText(Path.Combine(path, fileName), contents);
+        }
+
+        void WriteFile(string path, string fileName, byte[] contents)
+        {
+            File.WriteAllBytes(Path.Combine(path, fileName), contents);
+        }
+
+        void ExportNodes(string dir, string name, object obj)
+        {
+            void WriteInt()
+            {
+                WriteFile(dir, name + ".int", obj.ToString() + "\n" + obj.GetType().FullName);
+            }
+
+            void WriteFloat()
+            {
+                WriteFile(dir, name + ".flt", ((Double)obj).ToString(CultureInfo.InvariantCulture) + "\n" + obj.GetType().FullName);
+            }
+
+            switch (obj)
+            {
+                case WzProperty prop:
+                {
+                    var subdir = Path.Combine(dir, name);
+                    Directory.CreateDirectory(subdir);
+                    foreach (var kvp in prop)
+                    {
+                        ExportNodes(subdir, kvp.Key, kvp.Value);
+                    }
+                    WriteFile(subdir, "type.inf", "property");
+
+                    break;
+                }
+
+                case sbyte _: WriteInt(); break;
+                case Int16 _: WriteInt(); break;
+                case Int32 _: WriteInt(); break;
+                case Int64 _: WriteInt(); break;
+
+                case byte _: WriteInt(); break;
+                case UInt16 _: WriteInt(); break;
+                case UInt32 _: WriteInt(); break;
+                case UInt64 _: WriteInt(); break;
+                    
+                case float _: WriteFloat(); break;
+                case double _: WriteFloat(); break;
+
+                case string x: WriteFile(dir, name + ".txt", x); break;
+                case DateTime x: WriteFile(dir, name + ".dte", x.ToFileTimeUtc().ToString()); break;
+                    
+                case WzUOL x: WriteFile(dir, name + ".uol", x.Path); break;
+
+                case WzList list:
+                {
+                    var subdir = Path.Combine(dir, name);
+                    Directory.CreateDirectory(subdir);
+                    int i = 0;
+                    foreach (var pcomObject in list)
+                    {
+                        ExportNodes(subdir, i.ToString(), pcomObject);
+                        i++;
+                    }
+
+                    var typeText = "";
+
+                    switch (obj)
+                    {
+                        case WzConvex2D cvx: typeText = "convex"; break;
+                        case WzList _: 
+                            if (list.IsArray) typeText = "array";
+                            else typeText = "list";
+                            break;
+                        default: throw new Exception("???");
+                    }
+                    WriteFile(subdir, "type.inf", typeText);
+                    break;
+                }
+
+                case PcomObject po:
+                {
+                    using (var ms = new MemoryStream())
+                    using (var aw = new ArchiveWriter(ms))
+                    {
+                        po.Write(aw);
+                        aw.Flush();
+                        WriteFile(dir, po.Name + ".bin", ms.ToArray());
+                    }
+                    break;
+                }
+            }
+        }
+
+        private void flatsportToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var sn = tvData.SelectedNode;
+            if (sn?.Tag == null) return;
+
+            var folderBrowserDialog = new FolderSelect.FolderSelectDialog();
+            if (folderBrowserDialog.ShowDialog() == false) return;
+            
+            if (!(sn is WZTreeNode wtn)) return;
+            var tag = wtn.WzObject;
+            ExportNodes(folderBrowserDialog.FileName, sn.Name, tag);
+        }
+
+        private void OpenFolderInExplorerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (LoadedFolderPath != "")
+            {
+                Process.Start("explorer.exe", LoadedFolderPath);
+            }
         }
     }
 }

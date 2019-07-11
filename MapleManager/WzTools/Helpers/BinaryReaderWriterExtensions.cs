@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -49,12 +50,22 @@ namespace MapleManager.WzTools
         }
 
 
+        public static void ReadAndReturn(this BinaryReader reader, Action andNow)
+        {
+            reader.JumpAndReturn((int) reader.BaseStream.Position, andNow);
+        }
+
         public static void JumpAndReturn(this BinaryReader reader, int offset, Action andNow)
         {
             var prevPos = reader.BaseStream.Position;
             reader.BaseStream.Position = offset;
             andNow();
             reader.BaseStream.Position = prevPos;
+        }
+
+        public static T ReadAndReturn<T>(this BinaryReader reader, Func<T> andNow)
+        {
+            return reader.JumpAndReturn<T>((int)reader.BaseStream.Position, andNow);
         }
 
         public static T JumpAndReturn<T>(this BinaryReader reader, int offset, Func<T> andNow)
@@ -120,6 +131,35 @@ namespace MapleManager.WzTools
             else return reader.DecodeStringASCII(len);
         }
 
+        static bool IsLegalUnicode(string str)
+        {
+            for (int i = 0; i < str.Length; i++)
+            {
+                var uc = char.GetUnicodeCategory(str, i);
+
+                if (uc == UnicodeCategory.Surrogate)
+                {
+                    // Unpaired surrogate, like  "😵"[0] + "A" or  "😵"[1] + "A"
+                    return false;
+                }
+                else if (uc == UnicodeCategory.OtherNotAssigned)
+                {
+                    // \uF000 or \U00030000
+                    return false;
+                }
+
+                // Correct high-low surrogate, we must skip the low surrogate
+                // (it is correct because otherwise it would have been a 
+                // UnicodeCategory.Surrogate)
+                if (char.IsHighSurrogate(str, i))
+                {
+                    i++;
+                }
+            }
+
+            return true;
+        }
+
         private static string DecodeStringASCII(this BinaryReader reader, sbyte len)
         {
             int actualLen;
@@ -128,7 +168,28 @@ namespace MapleManager.WzTools
             
             var bytes = reader.ReadBytes(actualLen).ApplyStringXor(false);
 
-            WzEncryption.TryDecryptString(bytes, y => !y.Any(x => x < 0x20 && x != '\n' && x != '\r' && x != '\t'));
+            WzEncryption.TryDecryptString(bytes, y =>
+            {
+                var oddCharacters = y.Any(x => x < 0x20 && x != '\n' && x != '\r' && x != '\t');
+                if (oddCharacters) return false;
+
+                if (IsLegalUnicode(Encoding.UTF8.GetString(y))) return true;
+                
+                var converted = Encoding.Convert(Encoding.UTF8, Encoding.ASCII, y);
+                var specialCharacterCount = converted.Count(x => x == '?');
+                if ( specialCharacterCount * 100 / converted.Length >= 50)
+                {
+                    if (converted.Length > 5)
+                    {
+                        Console.WriteLine("Found {0} special characters on a string of {1} characters... wut.",
+                            specialCharacterCount, converted.Length);
+                    }
+
+                    return false;
+                }
+
+                return true;
+            });
             
             return Encoding.ASCII.GetString(Encoding.Convert(Encoding.UTF8, Encoding.ASCII, bytes));
         }

@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace MapleManager.WzTools.Package
 {
@@ -225,12 +226,24 @@ namespace MapleManager.WzTools.Package
                 crypto.Decrypt(copy);
                 if (validate == null || validate(copy))
                 {
+                    var isChanged = validate != null && crypto != currentEncryption;
+
+                    if (isChanged)
+                    {
+                        Console.WriteLine("Found crypto {0}", crypto);
+                        Console.WriteLine("\tString ASCII: {0}", Encoding.ASCII.GetString(contents));
+                        Console.WriteLine("\tString UTF8: {0}", Encoding.UTF8.GetString(contents));
+                        Console.WriteLine("Changed to...");
+                        Console.WriteLine("\tString ASCII: {0}", Encoding.ASCII.GetString(copy));
+                        Console.WriteLine("\tString UTF8: {0}", Encoding.UTF8.GetString(copy));
+                    }
+
                     // seems to have worked
                     copy.CopyTo(contents, 0);
 
-                    if (validate != null && crypto != currentEncryption)
+                    if (isChanged)
                     {
-                        Console.WriteLine("Found crypto {0}", crypto);
+                       
                         currentEncryption = crypto;
                         
                         PutCurrentInFront();
@@ -241,6 +254,9 @@ namespace MapleManager.WzTools.Package
             }
 
             Console.WriteLine("No crypto found for string!");
+            Console.WriteLine("String ASCII: {0}", Encoding.ASCII.GetString(contents));
+            Console.WriteLine("String UTF8: {0}", Encoding.UTF8.GetString(contents));
+
         }
 
         public static void ApplyCrypto(byte[] contents)

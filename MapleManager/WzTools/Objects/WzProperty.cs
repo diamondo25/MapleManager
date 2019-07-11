@@ -1,8 +1,9 @@
-﻿using System;
+﻿using MapleManager.WzTools.Helpers;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using MapleManager.WzTools.Helpers;
+using System.Text;
 using Int8 = System.SByte;
 using UInt8 = System.Byte;
 
@@ -54,6 +55,8 @@ namespace MapleManager.WzTools.Objects
             // ArrayVariant  = 35
             // ByRefVariant  = 36
         }
+
+        public WzProperty() { }
 
         public new object this[string key]
         {
@@ -108,9 +111,14 @@ namespace MapleManager.WzTools.Objects
 
         public override void Read(BinaryReader reader)
         {
-            if (reader.ReadByte() != 0)
+            var b = reader.ReadByte();
+            if (b != 0)
             {
-                throw new NotImplementedException("No support for ASCII");
+                reader.BaseStream.Position -= 1;
+                _objects = new Dictionary<string, object>();
+                // Note: do not use disposing, as it would dispose the stream
+                var sr = new StringReader(Encoding.ASCII.GetString(reader.ReadBytes(BlobSize)));
+                parse_ascii(sr);
             }
             else
             {
@@ -302,5 +310,157 @@ namespace MapleManager.WzTools.Objects
         public IEnumerator<KeyValuePair<string, object>> GetEnumerator() => _objects.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => _objects.GetEnumerator();
+
+
+        // In the Wvs logic, 's' is the key, and 'v' is the value
+
+        private void parse_ascii(TextReader stream)
+        {
+            WzProperty currentProperty = this;
+            string v = "", s = "";
+            while (read_line(stream, out var line))
+            {
+                parse_line(line, ref s, ref v);
+
+                add_line(ref currentProperty, s, v);
+            }
+        }
+
+        public static void add_line(ref WzProperty currentProperty, string s, string sv)
+        {
+            var parent = currentProperty.Parent as WzProperty;
+            object v;
+            if (s == isBlockStartStop)
+            {
+                // close brace
+                parent.Set(currentProperty.Name, currentProperty);
+                // go back to our parent
+                currentProperty = parent;
+                return;
+            }
+            else if (sv == isBlockStartStop)
+            {
+                // open brace
+                currentProperty = new WzProperty()
+                {
+                    Name = s,
+                    _objects = new Dictionary<string, object>(),
+                    Parent = currentProperty,
+                };
+                return;
+            }
+            else if (sv.Length > 0 && sv[0] == isAtSign)
+            {
+                // Its a UOL whoop
+                v = new WzUOL()
+                {
+                    Name = s,
+                    Absolute = false,
+                    Path = sv.Substring(1),
+                    Parent = currentProperty,
+                };
+            }
+            else
+            {
+                // Create key-value pair as string
+                v = sv; // Use the string as-is
+            }
+
+            currentProperty.Set(s, v);
+        }
+
+
+        // Skips all lines that start with #, / or '
+        // ' == old comment logic for like Basic, lol
+        public static bool read_line(TextReader stream, out string foundLine)
+        {
+            foundLine = "";
+            while (true)
+            {
+                var line = stream.ReadLine();
+                if (line == null)
+                {
+                    return false;
+                }
+                line = line.Trim();
+                if (line.Length == 0) continue;
+                var firstChar = line[0];
+
+                if (firstChar != '#' && firstChar != '/' && firstChar != '\'')
+                {
+                    foundLine = line;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        // Used by '{' and '}'
+        private const string isBlockStartStop = "\x07";
+        // Used by '@'
+        private const char isAtSign = '\x08';
+
+        public static string escape_str(string str)
+        {
+            // Remove all slashes. lol
+            return str.Replace("\\", "");
+        }
+
+        public static void parse_line(string line, ref string s, ref string v)
+        {
+            bool isEscape = false;
+            int i = 0;
+            for (; i < line.Length; i++)
+            {
+                if (isEscape)
+                    isEscape = false;
+                else if (line[i] == '\\')
+                    isEscape = true;
+                else if (line[i] == '=')
+                    break;
+            }
+
+            if (i != line.Length)
+            {
+                // We've got a value
+
+                s = line.Substring(0, i);
+                s = s.Trim();
+
+                // skipping null check
+                if (s.Length == 1 && s[0] == '{')
+                {
+                    s = isBlockStartStop;
+                }
+                s = escape_str(s);
+                
+
+                // The code does not check if you actually filled in a variable!
+
+                v = line.Substring(i + 1);
+                v = v.Trim();
+                // skipping null check
+
+                if (v.Length == 1 && v[0] == '{')
+                    v = isBlockStartStop;
+                else if (v.Length > 1 && v[0] == '@')
+                {
+                    // skip the @, replace with the at identifier
+                    v = "" + isAtSign + v.Substring(1);
+                }
+
+
+                v = escape_str(v);
+            }
+            else
+            {
+                v = null;
+                if (line.Length == 1 && line[0] == '}')
+                    s = isBlockStartStop;
+                else
+                    s = escape_str(v);
+            }
+        }
     }
 }

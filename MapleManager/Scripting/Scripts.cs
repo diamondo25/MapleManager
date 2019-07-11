@@ -34,13 +34,13 @@ namespace MapleManager.Scripting
                 }
                 parms.ReferencedAssemblies.Add(filename);
             }
-
+            
             parms.ReferencedAssemblies.Add(Assembly.GetExecutingAssembly().Location);
 
             return compiler.CompileAssemblyFromFile(parms, sources);
         }
 
-        public static T FindInterface<T>(System.Reflection.Assembly DLL)
+        public static T FindInterface<T>(Assembly DLL)
         {
             string InterfaceName = typeof(T).Name;
             // Loop through types looking for one that implements the given interface

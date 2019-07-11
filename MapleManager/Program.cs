@@ -5,7 +5,7 @@ namespace MapleManager
 {
     public static class Program
     {
-        public static Form1 MainForm { get; private set; }
+        public static MainForm MainForm { get; private set; }
 
         /// <summary>
         /// The main entry point for the application.
@@ -15,7 +15,7 @@ namespace MapleManager
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(MainForm = new Form1());
+            Application.Run(MainForm = new MainForm());
         }
     }
 }

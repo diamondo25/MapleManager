@@ -6,7 +6,7 @@ namespace MapleManager.WzTools.FileSystem
     class FSFile : NameSpaceFile
     {
         public string RealPath { get; set; }
-
+        
         public override BinaryReader GetReader()
         {
             var mmf = MemoryMappedFile.CreateFromFile(

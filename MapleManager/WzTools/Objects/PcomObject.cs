@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using MapleManager.Controls;
 using MapleManager.WzTools.Helpers;
 
@@ -24,20 +25,29 @@ namespace MapleManager.WzTools.Objects
         {
             var start = reader.BaseStream.Position;
             var t = reader.ReadByte();
-            if (t == '#')
-            {
-                //throw new NotImplementedException("ASCII file");
-                // TODO: Make WzProperty from ASCII file
-                return null;
-            }
+            var type = "";
 
             if (t == 'A')
             {
                 return null;
             }
 
-            var type = reader.ReadString(t, 0x1B, 0x73, 0);
             PcomObject obj;
+            if (t == '#')
+            {
+                type = reader.ReadAndReturn<string>(() =>
+                {
+                    var sr = new StringReader(Encoding.ASCII.GetString(reader.ReadBytes(Math.Min(100, blobSize))));
+                    return sr.ReadLine();
+                });
+
+                reader.BaseStream.Position += type.Length + 2; // \r\n
+            }
+            else
+            {
+                type = reader.ReadString(t, 0x1B, 0x73, 0);
+            }
+
             switch (type)
             {
                 case "Property": obj = new WzProperty(); break;
@@ -50,6 +60,12 @@ namespace MapleManager.WzTools.Objects
                 default:
                     Console.WriteLine("Don't know how to read this proptype: {0}", type);
                     return null;
+            }
+
+            if (t == '#' && !(obj is WzProperty))
+            {
+                // Unable to handle non-wzprops???
+                return null;
             }
 
             obj.BlobSize = blobSize - (int)(reader.BaseStream.Position - start);

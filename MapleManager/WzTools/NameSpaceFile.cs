@@ -26,7 +26,7 @@ namespace MapleManager.WzTools
                 if (_obj == null)
                 {
                     var reader = GetReader();
-                    _obj = PcomObject.LoadFromBlob(reader, (int)reader.BaseStream.Length);
+                    _obj = PcomObject.LoadFromBlob(reader, (int)Size);
                     if (_obj != null)
                     {
                         _obj.Name = Name;
