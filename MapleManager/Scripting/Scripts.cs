@@ -7,7 +7,6 @@ using Microsoft.CSharp;
 
 namespace MapleManager.Scripting
 {
-
     public class Scripts
     {
         private static CodeDomProvider compiler =

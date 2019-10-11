@@ -7,7 +7,7 @@ namespace MapleManager.WzTools
 {
     class NameSpaceFile : NameSpaceNode
     {
-        public virtual BinaryReader GetReader()
+        public virtual ArchiveReader GetReader()
         {
             return null;
         }
@@ -26,11 +26,12 @@ namespace MapleManager.WzTools
                 if (_obj == null)
                 {
                     var reader = GetReader();
-                    _obj = PcomObject.LoadFromBlob(reader, (int)Size);
-                    if (_obj != null)
+                    PcomObject.PrepareEncryption(reader);
+                    _obj = PcomObject.LoadFromBlob(reader, (int)Size, null, true);
+                    if (_obj != null && _obj is WzFileProperty wfp)
                     {
-                        _obj.Name = Name;
-                        _obj.TreeNode = TreeNode;
+                        wfp.Name = Name;
+                        wfp.FileNode = this;
 
                         if (false)
                         {
@@ -45,6 +46,10 @@ namespace MapleManager.WzTools
                 }
                 return _obj;
             }
+            set => _obj = value;
         }
+
+        public override object GetChild(string key) => Object?[key];
+        public override bool HasChild(string key) => Object?.HasChild(key) ?? false;
     }
 }

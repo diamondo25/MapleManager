@@ -7,7 +7,7 @@ namespace MapleManager.WzTools.Objects
     public class WzSound : PcomObject
     {
         public byte[] Blob = null;
-        public override void Read(BinaryReader reader)
+        public override void Read(ArchiveReader reader)
         {
             Blob = reader.ReadBytes(BlobSize);
         }
@@ -27,7 +27,7 @@ namespace MapleManager.WzTools.Objects
             return null;
         }
 
-        public override void Rename(string key, string newName)
+        public override bool HasChild(string key)
         {
             throw new NotImplementedException();
         }

@@ -14,14 +14,14 @@ namespace MapleManager.WzTools
 
         public static byte[] ApplyStringXor(this byte[] input, bool unicode)
         {
+            var length = input.Length;
             if (unicode)
             {
-                Debug.Assert((input.Length % 2) == 0);
+                Debug.Assert((length % 2) == 0);
             }
 
-            var bytes = new byte[input.Length];
-            var length = input.Length;
-            Buffer.BlockCopy(input, 0, bytes, 0, bytes.Length);
+            var bytes = new byte[length];
+            Buffer.BlockCopy(input, 0, bytes, 0, length);
             if (unicode)
             {
                 ushort mask = 0xAAAA;

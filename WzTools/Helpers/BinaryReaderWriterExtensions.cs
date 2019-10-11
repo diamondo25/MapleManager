@@ -160,6 +160,7 @@ namespace MapleManager.WzTools
             return true;
         }
 
+        private static WzEncryption _encryption = new WzEncryption();
         private static string DecodeStringASCII(this BinaryReader reader, sbyte len)
         {
             int actualLen;
@@ -168,7 +169,7 @@ namespace MapleManager.WzTools
             
             var bytes = reader.ReadBytes(actualLen).ApplyStringXor(false);
 
-            WzEncryption.TryDecryptString(bytes, y =>
+            _encryption.TryDecryptString(bytes, y =>
             {
                 var oddCharacters = y.Any(x => x < 0x20 && x != '\n' && x != '\r' && x != '\t');
                 if (oddCharacters) return false;
@@ -189,7 +190,7 @@ namespace MapleManager.WzTools
                 }
 
                 return true;
-            });
+            }, true);
             
             return Encoding.ASCII.GetString(Encoding.Convert(Encoding.UTF8, Encoding.ASCII, bytes));
         }
@@ -202,7 +203,7 @@ namespace MapleManager.WzTools
 
             var bytes = reader.ReadBytes(actualLen).ApplyStringXor(true);
 
-            WzEncryption.TryDecryptString(bytes, null);
+            _encryption.TryDecryptString(bytes, null, false);
 
             return Encoding.Unicode.GetString(bytes);
         }

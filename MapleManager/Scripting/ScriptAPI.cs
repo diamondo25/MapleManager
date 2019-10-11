@@ -41,6 +41,7 @@ namespace MapleManager
     {
         // Use Object instead
         private object _obj;
+        private WZTreeNode _treeNode;
 
         private object Object
         {
@@ -57,10 +58,11 @@ namespace MapleManager
         public string Name { get; private set; }
         private ScriptNode _parent;
 
-        public ScriptNode(object obj, ScriptNode parent)
+        public ScriptNode(object obj, ScriptNode parent, WZTreeNode treeNode)
         {
             _obj = obj;
             _parent = parent;
+            _treeNode = treeNode;
         }
         
         private ScriptNode LoadTreeNodeInfo(WZTreeNode node, string key)
@@ -81,21 +83,27 @@ namespace MapleManager
                 default: obj = tnValue; break;
             }
 
-            return new ScriptNode(obj, this) { Name = key };
+            return new ScriptNode(obj, this, node) { Name = key };
         }
 
         public override WZTreeNode TryGetTreeNode()
         {
-            if (_obj is NameSpaceFile nsf) return nsf.TreeNode;
-            if (Object is PcomObject po) return po.TreeNode;
-            return null;
+            WZTreeNode ret = _treeNode;
+
+            // check if parent is a treenode
+            if (ret == null && _parent != null)
+            {
+                var parentTreeNode = _parent.TryGetTreeNode();
+                parentTreeNode.TryLoad(false);
+                ret = parentTreeNode.Nodes[this.Name] as WZTreeNode;
+            }
+
+            return ret;
         }
 
         public override string GetFullPath()
         {
-            var wtn = TryGetTreeNode();
-            if (wtn != null) return wtn.FullPath;
-            return null;
+            return TryGetTreeNode()?.FullPath;
         }
 
         public ScriptNode this[string key]
@@ -107,7 +115,7 @@ namespace MapleManager
                     case PcomObject po:
                         var x = po.Get(key);
                         if (x == null) return null;
-                        return new ScriptNode(x, this) { Name = key };
+                        return new ScriptNode(x, this, null) { Name = key };
                     case TreeNode tn:
                         if (tn.Nodes.ContainsKey(key))
                         {
@@ -138,10 +146,35 @@ namespace MapleManager
                 else ret = ret[node];
 
 
-                if (ret == null) return null;
+                if (ret == null)
+                    return null;
             }
 
             return ret;
+        }
+        public WZTreeNode GetTreeNode(string path)
+        {
+            var nodes = path.Split('/');
+
+            ScriptNode ret = this;
+            foreach (var node in nodes)
+            {
+                if (node == "..") ret = ret._parent;
+                else if (node == ".") continue;
+                else ret = ret[node];
+
+
+                if (ret == null)
+                    return null;
+
+                var tn = ret.TryGetTreeNode();
+                if (tn == null)
+                {
+                    throw new Exception("Unable to get treenode???");
+                }
+            }
+
+            return ret.TryGetTreeNode();
         }
 
         public Int8 ToInt8()
@@ -339,7 +372,7 @@ namespace MapleManager
             switch (Object)
             {
                 case WzProperty prop:
-                    return prop.Select(x => new ScriptNode(x.Value, this) { Name = x.Key });
+                    return prop.Select(x => new ScriptNode(x.Value, this, null) { Name = x.Key });
                 case TreeNode tn:
                     {
                         var nodes = new List<TreeNode>();

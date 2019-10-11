@@ -26,7 +26,6 @@ namespace MapleManager.Controls
             WzObject = obj;
             if (obj is PcomObject pcomObject)
             {
-                pcomObject.TreeNode = this;
                 // TODO: Figure out if there's a way of loading nodes without
                 // actually creating Node's
                 UpdateData(); // Sets all the fields required
@@ -120,7 +119,6 @@ namespace MapleManager.Controls
 
             if (WzObject is PcomObject pcomObject)
             {
-                pcomObject.TreeNode = this;
 
                 var oldName = Name;
                 this.Name = pcomObject.Name;
@@ -259,11 +257,8 @@ namespace MapleManager.Controls
         /// </summary>
         public void UpdateData()
         {
-
             if (WzObject is PcomObject pcomObject)
             {
-                pcomObject.TreeNode = this;
-
                 var oldName = Name;
                 this.Name = pcomObject.Name;
                 //if (pcomObject.Parent != null && oldName != null)

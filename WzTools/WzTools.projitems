@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>659e8e59-e759-4665-a0f7-36bb7de7d722</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>MapleManager.WzTools</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)FileSystem\FSDirectory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileSystem\FSFile.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileSystem\WzFileSystem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\AlphaType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ArchiveReader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ArchiveWriter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\BinaryReaderWriterExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\CanvasColor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DitherType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DXTDecoder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ExtraTools.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\LevelMap.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\PixOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)INameSpaceNode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NameSpaceDirectory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NameSpaceFile.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NameSpaceNode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\LazyPcomObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\PcomObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\WzConvex2D.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\WzImage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\WzList.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\WzProperty.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\WzSound.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\WzUOL.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\WzVector2D.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Package\Encryption.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Package\WzPackage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WzNameSpace.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Controls\" />
+  </ItemGroup>
+</Project>

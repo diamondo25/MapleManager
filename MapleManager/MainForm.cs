@@ -54,7 +54,7 @@ namespace MapleManager
             if (lastDir.Count > 0)
                 LoadContentsOfFolder(lastDir[0]);
 
-            _mainScriptNode = new ScriptNode(tvData, null);
+            _mainScriptNode = new ScriptNode(tvData, null, null);
         }
 
         public void UpdateLastDirsMenu()
@@ -201,7 +201,7 @@ namespace MapleManager
 
             if (string.IsNullOrEmpty(Settings.Default.SelectedNode) == false)
             {
-                var node = _mainScriptNode.GetNode(Settings.Default.SelectedNode)?.TryGetTreeNode();
+                var node = _mainScriptNode.GetTreeNode(Settings.Default.SelectedNode);
                 node?.EnsureVisible();
                 tvData.SelectedNode = node;
             }
@@ -220,7 +220,6 @@ namespace MapleManager
                 node.Text = name;
                 node.Tag = new NameSpaceDirectory
                 {
-                    TreeNode = node
                 };
                 tvData.Nodes.Add(node);
                 Root[name] = node;
@@ -297,7 +296,7 @@ namespace MapleManager
             }
 
             var path = e.Node.FullPath;
-            if (path.Contains(".img/"))
+            if (path.Contains(".img/") && false)
             {
                 path = path.Substring(0, path.IndexOf(".img/") + 4);
             }
@@ -342,7 +341,7 @@ namespace MapleManager
                 node.Name = name;
                 node.Text = name;
                 node.Tag = kvp.Value;
-                kvp.Value.TreeNode = node;
+
                 node.SetNotLoaded();
 
                 parentNode.Nodes.Add(node);

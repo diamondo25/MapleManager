@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using MapleManager.WzTools.Package;
 using Int8 = System.SByte;
 using UInt8 = System.Byte;
 
@@ -108,8 +109,10 @@ namespace MapleManager.WzTools.Objects
         public string GetString(string key) => this[key].ToString();
 
         public bool HasKey(string key) => _objects.ContainsKey(key);
-
-        public override void Read(BinaryReader reader)
+        
+        public override bool HasChild(string key) => HasKey(key);
+        
+        public override void Read(ArchiveReader reader)
         {
             var b = reader.ReadByte();
             if (b != 0)
@@ -145,7 +148,7 @@ namespace MapleManager.WzTools.Objects
                         case WzVariantType.Int16Variant: obj = reader.ReadInt16(); break;
                         case WzVariantType.BoolVariant: obj = reader.ReadInt16() == 0; break;
 
-                        case WzVariantType.Uint32Variant: obj = reader.ReadCompressedInt(); break;
+                        case WzVariantType.Uint32Variant: obj = (uint)reader.ReadCompressedInt(); break;
                         case WzVariantType.Int32Variant: obj = reader.ReadCompressedInt(); break;
 
                         case WzVariantType.Float32Variant:
@@ -166,7 +169,7 @@ namespace MapleManager.WzTools.Objects
                         // Currency (CY)
                         case WzVariantType.CYVariant: obj = reader.ReadCompressedLong(); break;
                         case WzVariantType.Int64Variant: obj = reader.ReadCompressedLong(); break;
-                        case WzVariantType.Uint64Variant: obj = reader.ReadCompressedLong(); break;
+                        case WzVariantType.Uint64Variant: obj = (ulong)reader.ReadCompressedLong(); break;
 
                         case WzVariantType.UnknownVariant:
                             // blob
@@ -186,6 +189,9 @@ namespace MapleManager.WzTools.Objects
                             reader.BaseStream.Position = pos + size;
 
                             break;
+
+                        default:
+                            throw new Exception($"Unknown type: {type} in property!");
                     }
 
 
@@ -242,6 +248,12 @@ namespace MapleManager.WzTools.Objects
                     }
                     else writer.Write((byte)0);
                     break;
+
+                case Double x:
+                    writeVariant(WzVariantType.Float64Variant);
+                    writer.Write((double)x);
+                    break;
+
                 case string x:
                     writeVariant(WzVariantType.BStrVariant);
                     writer.Write(x, 1, 0);
@@ -275,6 +287,9 @@ namespace MapleManager.WzTools.Objects
                     writer.BaseStream.Position = cur;
 
                     break;
+
+                default:
+                    throw new Exception($"Unknown type: {obj?.GetType()} in property!");
             }
         }
 
@@ -282,6 +297,12 @@ namespace MapleManager.WzTools.Objects
         {
             writer.Write((byte)0); // ASCII
             writer.Write((byte)0);
+
+            if (_objects == null)
+            {
+                writer.WriteCompressedInt(0);
+                return;
+            }
 
             writer.WriteCompressedInt(_objects.Count);
 
@@ -292,25 +313,32 @@ namespace MapleManager.WzTools.Objects
             }
         }
 
-        public override void Set(string key, object value) => _objects[key] = value;
+        public override void Set(string key, object value)
+        {
+            if (_objects == null) _objects = new Dictionary<string, object>();
+            _objects[key] = value;
+            if (value is PcomObject po)
+            {
+                po.Parent = this;
+                po.Name = key;
+            }
+        }
 
         public override object Get(string key)
         {
             _objects.TryGetValue(key, out var x);
             return x;
         }
-
-        public override void Rename(string key, string newName)
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public bool HasMembers => _objects.Count > 0;
 
         public IEnumerator<KeyValuePair<string, object>> GetEnumerator() => _objects.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => _objects.GetEnumerator();
 
+        #region ASCII Loading
+
+        
 
         // In the Wvs logic, 's' is the key, and 'v' is the value
 
@@ -462,5 +490,15 @@ namespace MapleManager.WzTools.Objects
                     s = escape_str(v);
             }
         }
+        #endregion
+    }
+
+    public class WzFileProperty : WzProperty
+    {
+        // This is the reference to the actual 'filesystem'
+        public NameSpaceNode FileNode { get; set; }
+
+        public override object GetParent() => FileNode.GetParent();
+
     }
 }

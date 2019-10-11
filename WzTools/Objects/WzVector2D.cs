@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using MapleManager.WzTools.Helpers;
 
@@ -15,7 +16,7 @@ namespace MapleManager.WzTools.Objects
             set => Set(key, value);
         }
 
-        public override void Read(BinaryReader reader)
+        public override void Read(ArchiveReader reader)
         {
             X = reader.ReadCompressedInt();
             Y = reader.ReadCompressedInt();
@@ -54,9 +55,8 @@ namespace MapleManager.WzTools.Objects
             throw new InvalidDataException();
         }
 
-        public override void Rename(string key, string newName)
-        {
-            throw new NotImplementedException();
-        }
+        public override bool HasChild(string key) => key.ToLower() == "x" || key.ToLower() == "y";
+
+        public static implicit operator Point(WzVector2D vec) => new Point(vec.X, vec.Y);
     }
 }

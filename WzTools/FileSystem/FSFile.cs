@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.IO.MemoryMappedFiles;
+using MapleManager.WzTools.Helpers;
 
 namespace MapleManager.WzTools.FileSystem
 {
@@ -7,13 +8,13 @@ namespace MapleManager.WzTools.FileSystem
     {
         public string RealPath { get; set; }
         
-        public override BinaryReader GetReader()
+        public override ArchiveReader GetReader()
         {
             var mmf = MemoryMappedFile.CreateFromFile(
                 RealPath,
                 FileMode.Open
                 );
-            return new BinaryReader(mmf.CreateViewStream());
+            return new ArchiveReader(mmf.CreateViewStream());
         }
 
         public void Unload()

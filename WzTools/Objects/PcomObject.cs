@@ -1,15 +1,14 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using MapleManager.Controls;
 using MapleManager.WzTools.Helpers;
 
 namespace MapleManager.WzTools.Objects
 {
-    public abstract class PcomObject
+    public abstract class PcomObject : INameSpaceNode
     {
         public PcomObject Parent = null;
-        public WZTreeNode TreeNode = null;
+        
         public string Name { get; set; }
 
         public int BlobSize { get; set; }
@@ -20,8 +19,40 @@ namespace MapleManager.WzTools.Objects
             set => Set(key, value);
         }
 
+        public static void PrepareEncryption(ArchiveReader reader)
+        {
+            var start = reader.BaseStream.Position;
+            var t = reader.ReadByte();
+            if (t == 'A' || t == '#')
+            {
+                // not needed
+            }
+            else
+            {
+                string type = reader.ReadString(t, 0x1B, 0x73, 0);
+                switch (type)
+                {
+                    // Only a Property is valid on this level
+                    case "Property":
+                        /*
+                    case "List": 
+                    case "UOL": 
+                    case "Shape2D#Vector2D": 
+                    case "Shape2D#Convex2D": 
+                    case "Sound_DX8": 
+                    case "Canvas": 
+                    */
+                        reader.LockCurrentEncryption();
+                        break;
+                        
+                    default:
+                        throw new Exception($"Don't know how to read this proptype: {type}");
+                }
+            }
+            reader.BaseStream.Position = start;
+        }
 
-        public static PcomObject LoadFromBlob(BinaryReader reader, int blobSize = 0, string name = null)
+        public static PcomObject LoadFromBlob(ArchiveReader reader, int blobSize = 0, string name = null, bool isFileProp = false)
         {
             var start = reader.BaseStream.Position;
             var t = reader.ReadByte();
@@ -37,6 +68,7 @@ namespace MapleManager.WzTools.Objects
             {
                 type = reader.ReadAndReturn<string>(() =>
                 {
+                    // Try to read #Property
                     var sr = new StringReader(Encoding.ASCII.GetString(reader.ReadBytes(Math.Min(100, blobSize))));
                     return sr.ReadLine();
                 });
@@ -50,7 +82,9 @@ namespace MapleManager.WzTools.Objects
 
             switch (type)
             {
-                case "Property": obj = new WzProperty(); break;
+                case "Property":
+                    obj = isFileProp ? new WzFileProperty() : new WzProperty(); 
+                    break;
                 case "List": obj = new WzList(); break;
                 case "UOL": obj = new WzUOL(); break;
                 case "Shape2D#Vector2D": obj = new WzVector2D(); break;
@@ -92,13 +126,14 @@ namespace MapleManager.WzTools.Objects
             obj.Write(writer);
         }
 
-        public abstract void Read(BinaryReader reader);
+        public abstract void Read(ArchiveReader reader);
 
         public abstract void Write(ArchiveWriter writer);
 
         public abstract void Set(string key, object value);
         public abstract object Get(string key);
-        public abstract void Rename(string key, string newName);
+
+        public virtual bool HasChild(string key) => Get(key) != null;
 
         public string GetFullPath()
         {
@@ -117,6 +152,10 @@ namespace MapleManager.WzTools.Objects
         {
             return base.ToString() + ", Path: " + GetFullPath();
         }
+
+        public virtual object GetParent() => Parent;
+
+        public object GetChild(string key) => Get(key);
 
     }
 }

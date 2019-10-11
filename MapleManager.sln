@@ -1,15 +1,29 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2008
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29209.152
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapleManager", "MapleManager\MapleManager.csproj", "{D8EF86DC-F771-4D7E-AD02-79FB84173F20}"
+	ProjectSection(ProjectDependencies) = postProject
+		{27AD5099-10B1-4C45-9373-EDFB6D98882C} = {27AD5099-10B1-4C45-9373-EDFB6D98882C}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnumNormalizer", "EnumNormalizer\EnumNormalizer.csproj", "{F94CBD74-6C9D-470F-8574-B5D47FF04C5E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnimatedGif", "AnimatedGif\AnimatedGif\AnimatedGif.csproj", "{5D6202A8-CF66-498B-9FEB-DCEC100BDE87}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MapleManager.WzTools", "WzTools\MapleManager.WzTools.shproj", "{659E8E59-E759-4665-A0F7-36BB7DE7D722}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapleManager.WzTools.Test", "MapleManager.WzTools.Test\MapleManager.WzTools.Test.csproj", "{0CD6BBD3-7738-4EEA-A0EB-6A3F061D2828}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FixNamingConflict", "FixNamingConflict\FixNamingConflict.csproj", "{27AD5099-10B1-4C45-9373-EDFB6D98882C}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		WzTools\WzTools.projitems*{0cd6bbd3-7738-4eea-a0eb-6a3f061d2828}*SharedItemsImports = 4
+		WzTools\WzTools.projitems*{659e8e59-e759-4665-a0f7-36bb7de7d722}*SharedItemsImports = 13
+		WzTools\WzTools.projitems*{d8ef86dc-f771-4d7e-ad02-79fb84173f20}*SharedItemsImports = 4
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -27,6 +41,14 @@ Global
 		{5D6202A8-CF66-498B-9FEB-DCEC100BDE87}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D6202A8-CF66-498B-9FEB-DCEC100BDE87}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D6202A8-CF66-498B-9FEB-DCEC100BDE87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CD6BBD3-7738-4EEA-A0EB-6A3F061D2828}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CD6BBD3-7738-4EEA-A0EB-6A3F061D2828}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CD6BBD3-7738-4EEA-A0EB-6A3F061D2828}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CD6BBD3-7738-4EEA-A0EB-6A3F061D2828}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27AD5099-10B1-4C45-9373-EDFB6D98882C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27AD5099-10B1-4C45-9373-EDFB6D98882C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27AD5099-10B1-4C45-9373-EDFB6D98882C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27AD5099-10B1-4C45-9373-EDFB6D98882C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

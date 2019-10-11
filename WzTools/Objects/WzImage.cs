@@ -61,10 +61,11 @@ namespace MapleManager.WzTools.Objects
                             Path = (string)this["_outlink"],
                             Parent = Parent,
                             Name = Name,
-                            TreeNode = TreeNode,
                             Absolute = true
                         };
+                        
                         _linkedTile = (uol.ActualObject() as WzImage)?.Tile;
+
                         if (_linkedTile == null)
                         {
                             Console.WriteLine("Unable to load {0} image. Cur path: {1}", uol.Path, GetFullPath());
@@ -85,9 +86,9 @@ namespace MapleManager.WzTools.Objects
                             Path = (string)this["_inlink"],
                             Parent = imgNode,
                             Name = Name,
-                            TreeNode = TreeNode,
                             Absolute = false
                         };
+
                         _linkedTile = (uol.ActualObject() as WzImage)?.Tile;
                         if (_linkedTile == null)
                         {
@@ -114,7 +115,7 @@ namespace MapleManager.WzTools.Objects
         public int ExpectedDataSize => Pitch * (TileHeight /
                                                 ((PixFormat != WzPixFormat.DXT3 ? 0 : 3) + 1));
 
-        public override void Read(BinaryReader reader)
+        public override void Read(ArchiveReader reader)
         {
             // dont care
             Debug.Assert(reader.ReadByte() == 0); // just zero
@@ -164,7 +165,7 @@ namespace MapleManager.WzTools.Objects
 
                 var blob = new byte[Math.Min(0x2000, dataSize)];
 
-                if (WzEncryption.HasCurrentCrypto && !isPlainZlibStream)
+                if (reader.HasCurrentCrypto && !isPlainZlibStream)
                 {
                     // Need to skip 1
                     for (var i = 1; i < dataSize;)
@@ -174,7 +175,7 @@ namespace MapleManager.WzTools.Objects
                         Array.Resize(ref blob, blobSize);
                         reader.Read(blob, 0, blobSize);
 
-                        WzEncryption.TryDecryptImage(blob);
+                        reader.TryDecryptImage(blob);
                         inputStream.Write(blob, 0, blobSize);
                         i += blobSize;
                     }
@@ -281,6 +282,10 @@ namespace MapleManager.WzTools.Objects
                 writer.WriteCompressedInt((int)0);
 
 
+            // Data Size
+            writer.Write((Int32)0);
+
+            writer.Write((byte)0);
         }
 
         private byte[] ARGB16toARGB32(MemoryStream input, long inputLen)

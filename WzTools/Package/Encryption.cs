@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace MapleManager.WzTools.Package
 {
-    interface IWzEncryption
+    public interface IWzEncryption
     {
         void Decrypt(byte[] bytes);
         void Encrypt(byte[] bytes);
@@ -36,7 +37,8 @@ namespace MapleManager.WzTools.Package
 
         private void InitFirstBlock(byte[] iv)
         {
-            byte[] freshIvBlock = new byte[BlockSize] {
+            byte[] freshIvBlock = new byte[BlockSize]
+            {
                 iv[0], iv[1], iv[2], iv[3],
                 iv[0], iv[1], iv[2], iv[3],
                 iv[0], iv[1], iv[2], iv[3],
@@ -93,7 +95,7 @@ namespace MapleManager.WzTools.Package
                     int intBlocks = inputLength / bigChunkSize;
                     for (; i < intBlocks; ++i)
                     {
-                        *(UInt64*)currentInputByte ^= *(UInt64*)currentXorByte;
+                        *(UInt64*) currentInputByte ^= *(UInt64*) currentXorByte;
                         currentInputByte += bigChunkSize;
                         currentXorByte += bigChunkSize;
                     }
@@ -119,9 +121,8 @@ namespace MapleManager.WzTools.Package
 
         public DefaultUserKeyWzEncryption(byte[] iv) : base(DefaultAesUserKey, iv)
         {
-
         }
-        
+
         public void Decrypt(byte[] bytes)
         {
             XorData(bytes);
@@ -135,14 +136,14 @@ namespace MapleManager.WzTools.Package
 
     class GmsWzEncryption : DefaultUserKeyWzEncryption
     {
-        public GmsWzEncryption() : base(new byte[] { 0x4D, 0x23, 0xC7, 0x2B })
+        public GmsWzEncryption() : base(new byte[] {0x4D, 0x23, 0xC7, 0x2B})
         {
         }
     }
 
     class SeaWzEncryption : DefaultUserKeyWzEncryption
     {
-        public SeaWzEncryption() : base(new byte[] { 0xB9, 0x7D, 0x63, 0xE9 })
+        public SeaWzEncryption() : base(new byte[] {0xB9, 0x7D, 0x63, 0xE9})
         {
         }
     }
@@ -158,9 +159,10 @@ namespace MapleManager.WzTools.Package
         }
     }
 
-    static class WzEncryption
+    class WzEncryption
     {
-        private static IWzEncryption currentEncryption = null;
+        private IWzEncryption currentEncryption = null;
+        private bool cryptoLocked = false;
         private static IWzEncryption nopEncryption = new NopWzEncryption();
 
         private static IWzEncryption[] cryptos =
@@ -170,15 +172,17 @@ namespace MapleManager.WzTools.Package
             new SeaWzEncryption(),
         };
 
-        private static byte[] GetCopy(byte[] input)
+        private byte[] GetCopy(byte[] input)
         {
             var x = new byte[input.Length];
             input.CopyTo(x, 0);
             return x;
         }
 
-        private static void PutCurrentInFront()
+        private void PutCurrentInFront()
         {
+            if (currentEncryption == cryptos[0]) return;
+
             var x = cryptos[0];
             cryptos[0] = currentEncryption;
             for (var i = 1; i < cryptos.Length; i++)
@@ -191,27 +195,109 @@ namespace MapleManager.WzTools.Package
             }
         }
 
-        public static bool HasCurrentCrypto => currentEncryption != null;
+        public bool HasCurrentCrypto => currentEncryption != null;
 
-        public static void TryDecryptImage(byte[] contents)
+        public void TryDecryptImage(byte[] contents)
         {
             // I'm not going to try and crack it
-            // This is because a Property should already be succesfully decoded, setting currentEncryption.
+            // This is because a Property should already be successfully decoded, setting currentEncryption.
             if (currentEncryption != null)
             {
                 currentEncryption.Decrypt(contents);
             }
         }
 
-        private static void TrySetNopAsDefault()
+        public void ForceCrypto(IWzEncryption encryption, bool lockCrypto)
         {
-            if (currentEncryption != null) return;
+            currentEncryption = encryption;
+            cryptoLocked = lockCrypto;
+            PutCurrentInFront();
+        }
+
+        public void ForceCurrentCrypto()
+        {
+            ForceCrypto(currentEncryption, true);
+        }
+
+        private void TrySetNopAsDefault()
+        {
+            if (currentEncryption != null || cryptoLocked) return;
             currentEncryption = nopEncryption;
             PutCurrentInFront();
         }
 
-        public static void TryDecryptString(byte[] contents, Func<byte[], bool> validate)
+        private static int getScoreForString(string s, bool ascii)
         {
+            int score = 0;
+            foreach (var c in s)
+            {
+                if (ascii)
+                {
+                    if ((c >= 'a' && c <= 'z') ||
+                        (c >= 'A' && c <= 'Z') ||
+                        (c >= '0' && c <= '9')) score += 4;
+                    else if (c == ' ') score += 3;
+                    else if (c == '.' || c == ',') score += 3;
+                    else score += 1;
+                }
+                else
+                {
+                    if (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)) score += 4;
+                    else if (char.IsPunctuation(c)) score += 2;
+                    else score += 1;
+                }
+
+            }
+
+            //Trace.WriteLine($"Score for {ascii} {s}: {score}");
+
+            return score;
+        }
+
+
+        struct DecryptedString
+        {
+            public byte[] decrypted;
+            public IWzEncryption crypto;
+            public int score;
+        }
+
+        public void TryDecryptString(byte[] contents, Func<byte[], bool> validate, bool ascii)
+        {
+            if (cryptoLocked)
+            {
+                currentEncryption.Decrypt(contents);
+                return;
+            }
+
+            // Get score of data for each crypto
+            var results = new DecryptedString[cryptos.Length];
+            for (var i = 0; i < cryptos.Length; i++)
+            {
+                var crypto = cryptos[i];
+                var copy = GetCopy(contents);
+                crypto.Decrypt(copy);
+                var score = getScoreForString(ascii ? Encoding.ASCII.GetString(copy) : Encoding.Unicode.GetString(copy), ascii);
+                if (crypto == currentEncryption) score += 5;
+                results[i] = new DecryptedString
+                {
+                    decrypted = copy,
+                    score = score,
+                    crypto = crypto,
+                };
+
+            }
+
+            var orderedResults = results.OrderByDescending(x => x.score);
+
+            // Take a wild guess, pick the first one
+            var best = orderedResults.First();
+            currentEncryption = best.crypto;
+            PutCurrentInFront();
+            best.decrypted.CopyTo(contents, 0);
+
+            return;
+
             if (validate != null && validate(contents))
             {
                 TrySetNopAsDefault();
@@ -243,10 +329,11 @@ namespace MapleManager.WzTools.Package
 
                     if (isChanged)
                     {
-                       
                         currentEncryption = crypto;
-                        
-                        PutCurrentInFront();
+                        if (!cryptoLocked)
+                        {
+                            PutCurrentInFront();
+                        }
                     }
 
                     return;
@@ -256,10 +343,9 @@ namespace MapleManager.WzTools.Package
             Console.WriteLine("No crypto found for string!");
             Console.WriteLine("String ASCII: {0}", Encoding.ASCII.GetString(contents));
             Console.WriteLine("String UTF8: {0}", Encoding.UTF8.GetString(contents));
-
         }
 
-        public static void ApplyCrypto(byte[] contents)
+        public void ApplyCrypto(byte[] contents)
         {
             TrySetNopAsDefault();
             currentEncryption.Encrypt(contents);

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Windows.Forms;
 using MapleManager.Controls;
 using MapleManager.WzTools.Objects;
@@ -44,6 +46,7 @@ namespace MapleManager.Scripts.Animator
                 Program.MainForm.tvData.AfterSelect -= treeView1_AfterSelect;
                 return;
             }
+
             if (e.Node == null) return;
             if (!(e.Node is WZTreeNode)) return;
 
@@ -63,6 +66,7 @@ namespace MapleManager.Scripts.Animator
                     else if (prop.HasKey("fly")) tag = prop["fly"];
                     else if (prop.HasKey("die")) tag = prop["die"];
                     else if (prop.HasKey("stand")) tag = prop["stand"];
+                    else if (prop.HasKey("effect")) tag = prop["effect"];
                     else
                     {
                         if (prop.HasKey("info") && prop["info"] is WzProperty)
@@ -80,17 +84,23 @@ namespace MapleManager.Scripts.Animator
                                 }
                             }
                         }
+
                         return;
                     }
+                }
+
+                if (tag != null && tag is PcomObject)
+                {
+                    var pco = (PcomObject) tag;
+                    Trace.WriteLine("Using object: " + pco.Name);
                 }
 
                 object workingObject = tag;
                 if (workingObject is WzUOL)
                 {
                     var uol = (WzUOL) workingObject;
-                    workingObject = uol.ActualObject();
+                    workingObject = uol.ActualObject(true);
                 }
-
 
 
                 // Magic code for animation
@@ -129,24 +139,64 @@ namespace MapleManager.Scripts.Animator
                         }
                         else continue;
 
-                        frame.Image = actualImage;
+                        frame.Data = actualImage;
+                        frame.Tile = frame.Data.Tile;
 
-                        var originProp = actualImage["origin"] as WzVector2D;
+                        var originProp = frame.Data["origin"] as WzVector2D;
                         if (originProp != null)
                         {
-                            frame.X = originProp.X;
-                            frame.Y = originProp.Y;
+                            frame.OffsetX = originProp.X;
+                            frame.OffsetY = originProp.Y;
                         }
 
                         frame.delay = actualImage.HasKey("delay") ? actualImage.GetInt32("delay") : 100;
-                        frame.a0 = actualImage.HasKey("a0") ? actualImage.GetInt32("a0") : 255;
-                        frame.a1 = actualImage.HasKey("a1") ? actualImage.GetInt32("a1") : 255;
+                        int a0 = actualImage.HasKey("a0") ? actualImage.GetInt32("a0") : 255;
+                        int a1 = actualImage.HasKey("a1") ? actualImage.GetInt32("a1") : 255;
 
-                        var tile = actualImage.Tile;
+                        var tile = frame.Tile;
                         frame.Width = tile.Width;
                         frame.Height = tile.Height;
 
-                        frames.Add(frame);
+                        if (a0 != a1)
+                        {
+                            float diff = (1.0f * (a1 - a0));
+                            // Delay used for each frame for the animation
+                            // Try to make the diff as effienct as possible
+                            float animationDelay = frame.delay / 256.0f;
+
+                            float step = diff / (frame.delay / animationDelay);
+                            for (float a = a0; (a0 > a1 ? a >= a1 : a <= a1); a += step)
+                            {
+                                var bm = new Bitmap(frame.Width, frame.Height);
+
+                                using (var graphics = Graphics.FromImage(bm))
+                                {
+                                    var matrix = new ColorMatrix();
+                                    matrix.Matrix33 = a / 256.0f;
+
+                                    var imgAttr = new ImageAttributes();
+                                    imgAttr.SetColorMatrix(matrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
+
+                                    graphics.DrawImage(
+                                        tile,
+                                        new Rectangle(0, 0, frame.Width, frame.Height),
+                                        0, 0, frame.Width, frame.Height,
+                                        GraphicsUnit.Pixel,
+                                        imgAttr
+                                    );
+                                }
+
+                                var clone = frame.Clone();
+                                clone.Tile = bm;
+                                clone.CustomImage = true;
+                                clone.delay = (int)animationDelay;
+                                frames.Add(clone);
+                            }
+                        }
+                        else
+                        {
+                            frames.Add(frame);
+                        }
                     }
 
                     if (foundAny && indexesAreImageOrUOL)
@@ -164,21 +214,18 @@ namespace MapleManager.Scripts.Animator
                             }
                         }
 
-                        Trace.WriteLine("FRAMES");
 
                         if (frames.Count > 0)
                         {
                             form.LoadFrames(frames);
                         }
-
                     }
                 }
             }
             finally
             {
-               // Program.MainForm.EndTreeUpdate();
+                // Program.MainForm.EndTreeUpdate();
             }
         }
-
     }
 }

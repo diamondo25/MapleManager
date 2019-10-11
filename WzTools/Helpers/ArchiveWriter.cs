@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,11 @@ namespace MapleManager.WzTools.Helpers
     public class ArchiveWriter : BinaryWriter
     {
         private Dictionary<string, int> _stringPool = new Dictionary<string, int>();
+
+        /// <summary>
+        /// Encryption to use. Defaults to NopWzEncryption
+        /// </summary>
+        public IWzEncryption Encryption { get; set; } = new NopWzEncryption();
 
         public ArchiveWriter(Stream output) : base(output)
         {
@@ -56,9 +62,10 @@ namespace MapleManager.WzTools.Helpers
             }
         }
 
-        private byte[] EncodeString(string value, out bool unicode)
+        public byte[] EncodeString(string value, out bool unicode)
         {
-            unicode = value.Any(x => x >= 0x80);
+            unicode = ArchiveReader.IsLegalUnicode(value);
+            
 
             byte[] bytes;
 
@@ -66,7 +73,7 @@ namespace MapleManager.WzTools.Helpers
 
             bytes = encoding.GetBytes(value);
 
-            WzEncryption.ApplyCrypto(bytes);
+            Encryption.Encrypt(bytes);
 
             bytes = bytes.ApplyStringXor(unicode);
 

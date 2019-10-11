@@ -134,33 +134,6 @@
     <Compile Include="Settings.cs" />
     <Compile Include="Validators\MapValidator.cs" />
     <Compile Include="Validators\WzTreeView.cs" />
-    <Compile Include="WzTools\Helpers\ArchiveWriter.cs" />
-    <Compile Include="WzTools\Helpers\BinaryReaderWriterExtensions.cs" />
-    <Compile Include="WzTools\Helpers\ExtraTools.cs" />
-    <Compile Include="WzTools\FileSystem\FSDirectory.cs" />
-    <Compile Include="WzTools\FileSystem\FSFile.cs" />
-    <Compile Include="WzTools\Helpers\AlphaType.cs" />
-    <Compile Include="WzTools\Helpers\CanvasColor.cs" />
-    <Compile Include="WzTools\Helpers\DitherType.cs" />
-    <Compile Include="WzTools\Helpers\DXTDecoder.cs" />
-    <Compile Include="WzTools\Helpers\LevelMap.cs" />
-    <Compile Include="WzTools\Helpers\PixOperation.cs" />
-    <Compile Include="WzTools\NameSpaceNode.cs" />
-    <Compile Include="WzTools\NameSpaceDirectory.cs" />
-    <Compile Include="WzTools\FileSystem\WzFileSystem.cs" />
-    <Compile Include="WzTools\Objects\LazyPcomObject.cs" />
-    <Compile Include="WzTools\Objects\PcomObject.cs" />
-    <Compile Include="WzTools\Objects\WzConvex2D.cs" />
-    <Compile Include="WzTools\Objects\WzImage.cs" />
-    <Compile Include="WzTools\Objects\WzList.cs" />
-    <Compile Include="WzTools\Objects\WzProperty.cs" />
-    <Compile Include="WzTools\Objects\WzSound.cs" />
-    <Compile Include="WzTools\Objects\WzUOL.cs" />
-    <Compile Include="WzTools\Objects\WzVector2D.cs" />
-    <Compile Include="WzTools\Package\Encryption.cs" />
-    <Compile Include="WzTools\WzNameSpace.cs" />
-    <Compile Include="WzTools\Package\WzPackage.cs" />
-    <Compile Include="WzTools\NameSpaceFile.cs" />
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -229,8 +202,10 @@
       <Name>AnimatedGif</Name>
     </ProjectReference>
   </ItemGroup>
+  <Import Project="..\WzTools\WzTools.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /E /C "$(ProjectDir)\Scripts" "Scripts\" /Y</PostBuildEvent>
+    <PostBuildEvent>xcopy /E /C "$(ProjectDir)\Scripts" "Scripts\" /Y
+"$(ProjectDir)\..\FixNamingConflict\bin\$(ConfigurationName)\FixNamingConflict.exe" Scripts</PostBuildEvent>
   </PropertyGroup>
 </Project>

@@ -5,18 +5,18 @@ namespace MapleManager.WzTools.Objects
 {
     class LazyPcomObject<T> : PcomObject where T : PcomObject, new()
     {
-        private BinaryReader lazyReader;
+        private ArchiveReader lazyReader;
         public bool Loaded { get; set; } = false;
         private PcomObject _actualObject = null;
         public int OffsetInFile { get; set; }
 
-        public LazyPcomObject(BinaryReader reader)
+        public LazyPcomObject(ArchiveReader reader)
         {
             lazyReader = reader;
             OffsetInFile = (int)reader.BaseStream.Length;
         }
 
-        public override void Read(BinaryReader reader)
+        public override void Read(ArchiveReader reader)
         {
             
         }
@@ -46,12 +46,6 @@ namespace MapleManager.WzTools.Objects
         {
             TryLoad();
             return _actualObject.Get(key);
-        }
-
-        public override void Rename(string key, string newName)
-        {
-            TryLoad();
-            _actualObject.Rename(key, newName);
         }
     }
 }

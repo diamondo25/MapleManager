@@ -14,7 +14,7 @@ namespace MapleManager.WzTools.Objects
         public bool IsArray { get; private set; }
 
 
-        public override void Read(BinaryReader reader)
+        public override void Read(ArchiveReader reader)
         {
             if (reader.ReadByte() != 0)
             {
@@ -78,13 +78,7 @@ namespace MapleManager.WzTools.Objects
                 throw new InvalidDataException();
             }
         }
-
-        public override void Rename(string key, string newName)
-        {
-            throw new NotImplementedException();
-        }
-
-
+        
         public IEnumerator<PcomObject> GetEnumerator()
         {
             if (_obj is PcomObject[] arr) return arr.GetEnumerator() as IEnumerator<PcomObject>;

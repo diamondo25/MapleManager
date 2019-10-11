@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using MapleManager.WzTools.Helpers;
 
 namespace MapleManager.WzTools.Package
 {
@@ -13,7 +14,7 @@ namespace MapleManager.WzTools.Package
 
         public Func<int, uint, int> CalculateOffset { get; set; }
 
-        private BinaryReader Reader { get; set; }
+        private ArchiveReader Reader { get; set; }
         private uint InternalKey { get; set; }
         private byte InternalHash { get; set; }
         private int ContentsStart { get; set; }
@@ -173,7 +174,7 @@ namespace MapleManager.WzTools.Package
 
         public void Process()
         {
-            Reader = new BinaryReader(File.OpenRead(PackagePath));
+            Reader = new ArchiveReader(File.OpenRead(PackagePath));
             Size = (int)Reader.BaseStream.Length;
 
             var pkg1 = Reader.ReadChars(4);

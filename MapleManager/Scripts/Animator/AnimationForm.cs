@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using AnimatedGif;
+using MapleManager.WzTools.Objects;
 
 namespace MapleManager.Scripts.Animator
 {
@@ -19,7 +20,11 @@ namespace MapleManager.Scripts.Animator
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.UserPaint |
                 ControlStyles.DoubleBuffer,
-                true);
+                true
+            );
+
+            vScrollBar1.Value = vScrollBar1.Maximum / 2;
+            hScrollBar1.Value = hScrollBar1.Maximum / 2;
         }
 
         private Stopwatch sw = new Stopwatch();
@@ -30,14 +35,25 @@ namespace MapleManager.Scripts.Animator
         private int currentStart = 0;
         private int currentEnd = 0;
 
+        private bool paused = false;
+
         internal void LoadFrames(List<FrameInfo> pictureFrames)
         {
             sw.Reset();
+
+            var tmp = this.frames;
+            for (var i = 0; i < tmp.Count; i++)
+            {
+                tmp[i].Dispose();
+            }
+
             this.frames = pictureFrames;
 
             totalDuration = pictureFrames.Sum(x => x.delay);
             currentStart = 0;
             currentEnd = this.frames[0].delay;
+            tbFrame.Minimum = 0;
+            tbFrame.Maximum = this.frames.Count - 1;
             SetFrame(0);
             sw.Start();
         }
@@ -72,47 +88,89 @@ namespace MapleManager.Scripts.Animator
             if (idx >= frames.Count) idx = 0;
             var frame = frames[idx];
             currentFrame = idx;
+            tbFrame.Value = currentFrame;
 
             currentEnd = currentStart + frame.delay;
-            this.Text = string.Format("Frame {0}, x {1} y {2} w {3} h {4}", currentFrame, frame.X, frame.Y, frame.Width, frame.Height);
+            this.Text = string.Format("Frame {0}, x {1} y {2} w {3} h {4}", currentFrame, frame.OffsetX, frame.OffsetY, frame.Width, frame.Height);
+            if (paused) this.Text += " - PAUSED";
 
-            RecalculateFramePosition();
             this.Invalidate();
         }
 
+        private int centerX;
+        private int centerY;
 
-        private int drawImageX = 0, drawImageY = 0;
-        private void RecalculateFramePosition()
+        Point correctPoint(int x, int y)
         {
-            var frame = frames[currentFrame];
-
-            drawImageY = (int)((Height * TopOffsetPercentage) - frame.Y);
-            drawImageX = (Width / 2) - frame.X;
+            return new Point(centerX + x, centerY + y);
         }
-
 
         private void AnimationForm_Paint(object sender, PaintEventArgs e)
         {
-            var pen = new Pen(Color.Black);
-            var y = (int)(Height * TopOffsetPercentage);
-            e.Graphics.DrawLine(pen, 0, y, Width, y);
+            var penBlack = new Pen(Color.Black);
+            centerY = (int)(Height * TopOffsetPercentage);
+            centerX = Width / 2;
 
-            e.Graphics.DrawLine(pen, Width / 2, 0, Width / 2, Height);
+            centerX += (hScrollBar1.Maximum / 2) - hScrollBar1.Value;
+            centerY += (vScrollBar1.Maximum / 2) - vScrollBar1.Value;
+            var graphics = e.Graphics;
+            
+            graphics.DrawLine(penBlack, 0, centerY, Width, centerY);
+
+            graphics.DrawLine(penBlack, centerX, 0, centerX, Height);
 
             if (frames.Count > currentFrame)
             {
-                e.Graphics.DrawImageUnscaled(frames[currentFrame].Image.Tile, drawImageX, drawImageY);
+                var frame = frames[currentFrame];
+                graphics.DrawImageUnscaled(frame.Tile, correctPoint(-frame.OffsetX, -frame.OffsetY));
+                var head = frame.Data["head"] as WzVector2D;
+                var lt = frame.Data["lt"] as WzVector2D;
+                var rb = frame.Data["rb"] as WzVector2D;
+
+                if (head != null)
+                {
+                    var penHead = new Pen(Color.Red, 3);
+                    graphics.DrawLine(
+                        penHead,
+                        correctPoint(head.X + 3, head.Y + 3),
+                        correctPoint(head.X - 3, head.Y - 3)
+                    );
+
+                    graphics.DrawLine(
+                        penHead,
+                        correctPoint(head.X - 3, head.Y + 3),
+                        correctPoint(head.X + 3, head.Y - 3)
+                    );
+                }
+
+                if (lt != null && rb != null)
+                {
+                    var penBorder = new Pen(Color.Blue);
+                    graphics.DrawLines(
+                        penBorder,
+                        new []
+                        {
+                            correctPoint(lt.X, lt.Y),
+                            correctPoint(rb.X, lt.Y),
+                            correctPoint(rb.X, rb.Y),
+                            correctPoint(lt.X, rb.Y),
+                            correctPoint(lt.X, lt.Y),
+                        }
+                    );
+                }
             }
         }
 
         private void AnimationForm_Load(object sender, System.EventArgs e)
         {
+            updateStartPauseButtonText();
         }
 
         private void timer1_Tick(object sender, System.EventArgs e)
         {
             if (frames.Count == 0) return;
             if (totalDuration == 0) return;
+            if (paused) return;
             SetFrameByTime(sw.ElapsedMilliseconds);
         }
 
@@ -186,8 +244,8 @@ namespace MapleManager.Scripts.Animator
             int i = 0;
             foreach (var x in frames)
             {
-                bounds[i++] = new FrameBounds(x.X, x.Y, x.Width, x.Height, x);
-                Console.WriteLine("{0} {1} {2} {3}", x.X, x.Y, x.Width, x.Height);
+                bounds[i++] = new FrameBounds(x.OffsetX, x.OffsetY, x.Width, x.Height, x);
+                Console.WriteLine("{0} {1} {2} {3}", x.OffsetX, x.OffsetY, x.Width, x.Height);
             }
 
 
@@ -230,7 +288,7 @@ namespace MapleManager.Scripts.Animator
                         Console.WriteLine("Drawing image {0} - {1}, {2} - {3}", x, x + b.Width, y, y + b.Height);
 
                         g.DrawImageUnscaled(
-                            b.frame.Image.Tile,
+                            b.frame.Tile,
                             x,
                             y
                         );
@@ -256,9 +314,36 @@ namespace MapleManager.Scripts.Animator
             }
         }
 
+        private void tbFrame_ValueChanged(object sender, EventArgs e)
+        {
+            SetFrame(tbFrame.Value);
+        }
+
+        private void btnStartPause_Click(object sender, EventArgs e)
+        {
+            paused = !paused;
+            updateStartPauseButtonText();
+        }
+
+        private void updateStartPauseButtonText()
+        {
+            btnStartPause.Text = paused ? "►" : "||";
+
+        }
+
         private void AnimationForm_Resize(object sender, EventArgs e)
         {
-            RecalculateFramePosition();
+            Invalidate();
+        }
+
+        private void hScrollBar1_ValueChanged(object sender, EventArgs e)
+        {
+            Invalidate();
+        }
+
+        private void vScrollBar1_ValueChanged(object sender, EventArgs e)
+        {
+            Invalidate();
         }
     }
 }
