@@ -15,14 +15,16 @@ namespace MapleManager.WzTools.Helpers
         public bool HasCurrentCrypto => _encryption.HasCurrentCrypto;
         public void SetEncryption(IWzEncryption crypto) => _encryption.ForceCrypto(crypto, true);
         public void LockCurrentEncryption() => _encryption.ForceCurrentCrypto();
+        public IWzEncryption GetCurrentEncryption() => _encryption.GetCurrentEncryption();
 
+        private int contentsStart = 0;
 
-
-        public ArchiveReader(Stream output) : base(output)
+        public ArchiveReader(Stream output, int offset = 0) : base(output)
         {
+            contentsStart = offset;
         }
 
-        public string ReadString(bool deduplicated, int contentsStart = 0)
+        public string ReadString(bool deduplicated)
         {
             if (!deduplicated)
             {
@@ -30,11 +32,11 @@ namespace MapleManager.WzTools.Helpers
             }
             else
             {
-                return ReadDeDuplicatedString(contentsStart);
+                return ReadDeDuplicatedString();
             }
         }
 
-        public string ReadString(byte id, byte existingID, byte newID, int contentsStart = 0)
+        public string ReadStringWithID(byte id, byte existingID, byte newID)
         {
             if (id == newID)
             {
@@ -42,19 +44,19 @@ namespace MapleManager.WzTools.Helpers
             }
             else if (id == existingID)
             {
-                return ReadDeDuplicatedString(contentsStart);
+                return ReadDeDuplicatedString();
             }
 
             throw new Exception($"Unknown ID. Expected {existingID} or {newID}, but got {id}.");
         }
 
-        public string ReadString(byte existingID, byte newID, int contentsStart = 0)
+        public string ReadString(byte existingID, byte newID)
         {
             var p = ReadByte();
-            return ReadString(p, existingID, newID, contentsStart);
+            return ReadStringWithID(p, existingID, newID);
         }
 
-        private string ReadDeDuplicatedString(int contentsStart = 0)
+        private string ReadDeDuplicatedString()
         {
             var off = ReadInt32();
 

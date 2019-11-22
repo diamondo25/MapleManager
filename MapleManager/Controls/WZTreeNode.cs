@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
+using MapleManager.Validators;
+using MapleManager.WzTools;
 using MapleManager.WzTools.FileSystem;
 using MapleManager.WzTools.Objects;
 
@@ -86,6 +88,10 @@ namespace MapleManager.Controls
         public void SetNotLoadedTooltip()
         {
             ToolTipText = "-- not loaded --";
+            if (Tag is NameSpaceFile nsf)
+            {
+                ToolTipText += $"\r\nIMG Size: {nsf.Size} bytes";
+            }
         }
 
         public bool IsNotLoaded()
@@ -98,7 +104,7 @@ namespace MapleManager.Controls
         public void TryLoad(bool force)
         {
             if (!force && !IsNotLoaded()) return;
-            var nsf = Tag as FSFile;
+            var nsf = Tag as NameSpaceFile;
             var obj = nsf.Object;
             WzObject = obj;
             Nodes.Clear();
@@ -158,7 +164,7 @@ namespace MapleManager.Controls
                         Text += " (type: " + type + ")";
 
 
-                    if (pcomObject is WzImage image)
+                    if (pcomObject is WzCanvas image)
                     {
                         ToolTipText = "Image" + Environment.NewLine;
                         ToolTipText += "MagLevel: " + image.MagLevel + Environment.NewLine;
@@ -233,6 +239,13 @@ namespace MapleManager.Controls
                 ToolTipText = "null";
             }
 
+
+            if (Tag is NameSpaceDirectory nsd)
+            {
+                ToolTipText += Environment.NewLine + "SubDirs: " + nsd.SubDirectories.Count;
+                ToolTipText += Environment.NewLine + "Files: " + nsd.Files.Count;
+            }
+
             if (AdditionalInfo != null)
             {
                 foreach (var o in AdditionalInfo)
@@ -247,6 +260,10 @@ namespace MapleManager.Controls
                 }
             }
 
+            if (ToolTipText != "") ToolTipText += Environment.NewLine;
+            ToolTipText += $"Subnodes: {Nodes.Count}";
+
+
             var tttt = Text;
             if (tttt.Length > 100) tttt = tttt.Substring(0, 100);
             ToolTipText = tttt + Environment.NewLine + ToolTipText;
@@ -257,6 +274,17 @@ namespace MapleManager.Controls
         /// </summary>
         public void UpdateData()
         {
+            var isSelectedNodeInCurrentNode = false;
+            var pathToSelectedNode = "";
+
+            if (TreeView != null)
+            {
+                pathToSelectedNode = TreeView?.SelectedNode?.FullPath ?? "/this-will-not-match/";
+                isSelectedNodeInCurrentNode = pathToSelectedNode.StartsWith(FullPath) && pathToSelectedNode != FullPath;
+
+                Trace.WriteLine($"UpdateData {this.FullPath} ({pathToSelectedNode}), selected in this node: {isSelectedNodeInCurrentNode}");
+            }
+
             if (WzObject is PcomObject pcomObject)
             {
                 var oldName = Name;
@@ -265,6 +293,8 @@ namespace MapleManager.Controls
                 //    pcomObject.Parent.Rename(oldName, Name);
 
                 Text = Name;
+
+                Nodes.Clear();
 
                 if (pcomObject is WzProperty prop)
                 {
@@ -293,6 +323,13 @@ namespace MapleManager.Controls
             }
 
             UpdateText();
+
+            if (isSelectedNodeInCurrentNode)
+            {
+                var vn = TreeView.FindNode<TreeNode>(pathToSelectedNode);
+                TreeView.SelectedNode = vn;
+            }
         }
+
     }
 }

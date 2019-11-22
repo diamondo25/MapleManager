@@ -1,23 +1,21 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
+using MapleManager.WzTools.Helpers;
 using MapleManager.WzTools.Objects;
 
 namespace MapleManager.WzTools
 {
     static class ExtraTools
     {
-        public static int IMGNameToID(this WzProperty property)
-        {
-            return int.Parse(property.Name.Replace(".img", ""), NumberStyles.Number);
-        }
-
         public static byte[] ApplyStringXor(this byte[] input, bool unicode)
         {
             var length = input.Length;
             if (unicode)
             {
-                Debug.Assert((length % 2) == 0);
+                if ((length % 2) != 0) throw new Exception("Input string is not power of two");
             }
 
             var bytes = new byte[length];
@@ -44,6 +42,33 @@ namespace MapleManager.WzTools
             }
 
             return bytes;
+        }
+
+        public static int PixelsPerYAxis(this WzPixFormat _this)
+        {
+            if (_this == WzPixFormat.DXT3 || _this == WzPixFormat.DXT5) return 4;
+            return 1;
+        }
+
+        public static int BytesPerPixel(this WzPixFormat _this)
+        {
+            switch ((int)_this & 0xFF)
+            {
+                case 1: return 2;
+                case 2: return 4;
+                default: throw new Exception($"Unknow pixformat value: {(int)_this & 0xFF}");
+            }
+        }
+
+        public static WzPixFormat ToWzPixFormat(this PixelFormat _this)
+        {
+            switch (_this)
+            {
+                case PixelFormat.Format32bppRgb: return WzPixFormat.A8R8G8B8;
+                case PixelFormat.Format32bppArgb: return WzPixFormat.A8R8G8B8;
+                case PixelFormat.Format16bppRgb565: return WzPixFormat.R5G6B5;
+                default: throw new Exception($"Unusable PixelFormat: {_this}");
+            }
         }
     }
 }

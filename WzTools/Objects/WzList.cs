@@ -10,8 +10,8 @@ namespace MapleManager.WzTools.Objects
     public class WzList : PcomObject, IEnumerable<PcomObject>
     {
         protected object _obj = null;
-        public int ChildCount { get; private set; }
-        public bool IsArray { get; private set; }
+        public int ChildCount { get; protected set; }
+        public bool IsArray { get; protected set; }
 
 
         public override void Read(ArchiveReader reader)

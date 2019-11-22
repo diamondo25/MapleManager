@@ -52,7 +52,8 @@ namespace MapleManager.WzTools.Objects
                 case "Y":
                 case "y": return Y;
             }
-            throw new InvalidDataException();
+
+            return null;
         }
 
         public override bool HasChild(string key) => key.ToLower() == "x" || key.ToLower() == "y";

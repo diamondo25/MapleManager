@@ -11,6 +11,7 @@ using MapleManager.Controls;
 using MapleManager.Properties;
 using MapleManager.Scripts;
 using MapleManager.Scripts.Animator;
+using MapleManager.Scripts.CharacterGen;
 using MapleManager.WzTools;
 using MapleManager.WzTools.FileSystem;
 using MapleManager.WzTools.Helpers;
@@ -54,7 +55,7 @@ namespace MapleManager
             if (lastDir.Count > 0)
                 LoadContentsOfFolder(lastDir[0]);
 
-            _mainScriptNode = new ScriptNode(tvData, null, null);
+            _mainScriptNode = new ScriptNode("/", tvData, null, null);
         }
 
         public void UpdateLastDirsMenu()
@@ -183,21 +184,19 @@ namespace MapleManager
                 tsmi.DropDownItems.Add(mi);
             }
 
-            foreach (var scriptFile in new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, "Scripts")).GetFiles("*.cs"))
+            var scriptsDir = new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, "Scripts"));
+            foreach (var scriptFile in scriptsDir.GetFiles("*.cs"))
             {
                 addScript(scriptFile.Name, scriptFile.FullName);
             }
 
-            foreach (var scriptDir in new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, "Scripts")).GetDirectories())
+            foreach (var scriptDir in scriptsDir.GetDirectories())
             {
                 addScript(scriptDir.Name, scriptDir.FullName);
             }
 
-            var anim = new Animator();
-            anim.Start(_mainScriptNode);
-
-            var tr = new TextRenderScript();
-            tr.Start(_mainScriptNode);
+            new Animator().Start(_mainScriptNode);
+            // new TextRenderScript().Start(_mainScriptNode);
 
             if (string.IsNullOrEmpty(Settings.Default.SelectedNode) == false)
             {
@@ -273,7 +272,7 @@ namespace MapleManager
             }
 
 
-            if (workingObject is WzImage img)
+            if (workingObject is WzCanvas img)
             {
                 pbNodeImage.Image = img.Tile;
             }
@@ -306,7 +305,7 @@ namespace MapleManager
 
         private void InsertDirectories(WZTreeNode parentNode, NameSpaceDirectory folder)
         {
-            foreach (var dir in folder.SubDirectories)
+            foreach (var dir in folder.SubDirectories.OrderBy(x => x.Name))
             {
                 var name = dir.Name;
 
@@ -332,20 +331,22 @@ namespace MapleManager
 
         private void InsertFiles(TreeNode parentNode, NameSpaceDirectory folder)
         {
-            var files = folder.Files.Where(x => x.Name.EndsWith(".img")).ToDictionary(x => x.Name, x => x);
+            var files = folder.Files.Where(x => x.Name.EndsWith(".img")).OrderBy(x => x.Name);
 
-            foreach (var kvp in files)
+            foreach (var file in files)
             {
-                var name = kvp.Key;
+                var name = file.Name;
                 var node = new WZTreeNode();
                 node.Name = name;
                 node.Text = name;
-                node.Tag = kvp.Value;
+                node.Tag = file;
 
                 node.SetNotLoaded();
 
                 parentNode.Nodes.Add(node);
             }
+
+            parentNode.ToolTipText = $"Subnodes: {parentNode.Nodes.Count}";
         }
 
 
@@ -363,6 +364,31 @@ namespace MapleManager
             AddLastDir(folder);
             LoadedFolderPath = folder;
             openFolderInExplorerToolStripMenuItem.Visible = true;
+        }
+
+        private void LoadContentsOfWZFiles(params string[] files)
+        {
+            var key = Prompt("WZ Key?");
+            
+            var ns = new WzNameSpace();
+
+            foreach (var wzFile in files)
+            {
+                var package = new WzPackage(wzFile, key, ns);
+                package.Process();
+            }
+
+            BeginTreeUpdate();
+            LoadContentsSmart(ns);
+            EndTreeUpdate();
+        }
+
+        private void LoadContentsOfWZFilesFolder(string folder)
+        {
+            var dirInfo = new DirectoryInfo(folder);
+
+            LoadContentsOfWZFiles(dirInfo.GetDirectories("*.wz").Select(x => x.FullName).ToArray());
+
         }
 
         private void LoadContentsSmart(WzNameSpace ns)
@@ -390,22 +416,35 @@ namespace MapleManager
 
         private void wZToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (InfoMessage("This will extract the WZ file? Are you sure?", MessageBoxButtons.OKCancel) ==
-                DialogResult.Cancel) return;
+            if (false)
+            {
+                if (InfoMessage("This will extract the WZ file? Are you sure?", MessageBoxButtons.OKCancel) ==
+                    DialogResult.Cancel) return;
 
-            var ofd = new OpenFileDialog();
-            ofd.FileName = @"C:\Program Files (x86)\MapleGlobalT_2 - kopie\Data.wz";
-            ofd.Filter = "WZ Files|*.wz";
-            ofd.Multiselect = true;
+                var ofd = new OpenFileDialog();
+                ofd.FileName = @"C:\Program Files (x86)\MapleGlobalT_2 - kopie\Data.wz";
+                ofd.Filter = "WZ Files|*.wz";
+                ofd.Multiselect = true;
 
-            if (ofd.ShowDialog() != DialogResult.OK) return;
+                if (ofd.ShowDialog() != DialogResult.OK) return;
 
 
-            var folderBrowserDialog = new FolderSelect.FolderSelectDialog();
-            if (folderBrowserDialog.ShowDialog() == false) return;
-            ExtractWZFile(folderBrowserDialog.FileName, ofd.FileNames);
+                var folderBrowserDialog = new FolderSelect.FolderSelectDialog();
+                if (folderBrowserDialog.ShowDialog() == false) return;
+                ExtractWZFile(folderBrowserDialog.FileName, ofd.FileNames);
 
-            LoadContentsOfFolder(folderBrowserDialog.FileName);
+                LoadContentsOfFolder(folderBrowserDialog.FileName);
+            }
+            else
+            {
+                var ofd = new OpenFileDialog();
+                ofd.FileName = @"C:\Program Files (x86)\MapleGlobalT_2 - kopie\Data.wz";
+                ofd.Filter = "WZ Files|*.wz";
+                ofd.Multiselect = true;
+
+                if (ofd.ShowDialog() != DialogResult.OK) return;
+                LoadContentsOfWZFiles(ofd.FileNames);
+            }
         }
 
         private string Prompt(string question)
@@ -440,24 +479,25 @@ namespace MapleManager
 
         private void ExtractWZFile(string extractPath, params string[] wzFiles)
         {
+            var outputFolder = new DirectoryInfo(extractPath);
             var key = Prompt("WZ Key?");
 
             foreach (var wzFile in wzFiles)
             {
-                var fsp = new WzPackage(wzFile, key);
-
-                try
+                using (var fsp = new WzPackage(wzFile, key))
                 {
-                    fsp.Process();
-                }
-                catch (Exception ex)
-                {
-                    ErrorMessage($"Exception occurred while loading file: {ex}");
-                    return;
-                }
+                    try
+                    {
+                        fsp.Process();
+                    }
+                    catch (Exception ex)
+                    {
+                        ErrorMessage($"Exception occurred while loading file: {ex}");
+                        return;
+                    }
 
-                fsp.Extract(extractPath);
-
+                    fsp.Extract(outputFolder.CreateSubdirectory(fsp.Name));
+                }
             }
             InfoMessage("Done extracting!");
         }
@@ -506,8 +546,6 @@ namespace MapleManager
             {
                 pmi.Tag = script;
             }
-
-            Trace.WriteLine("hurr");
         }
 
 
@@ -532,7 +570,6 @@ namespace MapleManager
 #endif
                 EndTreeUpdate();
             }
-            Trace.WriteLine("hurr");
         }
 
         private void StopScriptItem(object sender, EventArgs eventArgs)
@@ -544,7 +581,6 @@ namespace MapleManager
             {
                 script.Stop();
             }
-            Trace.WriteLine("durr");
         }
 
         private void splitContainer1_Panel2_Paint(object sender, PaintEventArgs e)
@@ -709,17 +745,17 @@ namespace MapleManager
             switch (obj)
             {
                 case WzProperty prop:
-                {
-                    var subdir = Path.Combine(dir, name);
-                    Directory.CreateDirectory(subdir);
-                    foreach (var kvp in prop)
                     {
-                        ExportNodes(subdir, kvp.Key, kvp.Value);
-                    }
-                    WriteFile(subdir, "type.inf", "property");
+                        var subdir = Path.Combine(dir, name);
+                        Directory.CreateDirectory(subdir);
+                        foreach (var kvp in prop)
+                        {
+                            ExportNodes(subdir, kvp.Key, kvp.Value);
+                        }
+                        WriteFile(subdir, "type.inf", "property");
 
-                    break;
-                }
+                        break;
+                    }
 
                 case sbyte _: WriteInt(); break;
                 case Int16 _: WriteInt(); break;
@@ -730,52 +766,52 @@ namespace MapleManager
                 case UInt16 _: WriteInt(); break;
                 case UInt32 _: WriteInt(); break;
                 case UInt64 _: WriteInt(); break;
-                    
+
                 case float _: WriteFloat(); break;
                 case double _: WriteFloat(); break;
 
                 case string x: WriteFile(dir, name + ".txt", x); break;
                 case DateTime x: WriteFile(dir, name + ".dte", x.ToFileTimeUtc().ToString()); break;
-                    
+
                 case WzUOL x: WriteFile(dir, name + ".uol", x.Path); break;
 
                 case WzList list:
-                {
-                    var subdir = Path.Combine(dir, name);
-                    Directory.CreateDirectory(subdir);
-                    int i = 0;
-                    foreach (var pcomObject in list)
                     {
-                        ExportNodes(subdir, i.ToString(), pcomObject);
-                        i++;
-                    }
+                        var subdir = Path.Combine(dir, name);
+                        Directory.CreateDirectory(subdir);
+                        int i = 0;
+                        foreach (var pcomObject in list)
+                        {
+                            ExportNodes(subdir, i.ToString(), pcomObject);
+                            i++;
+                        }
 
-                    var typeText = "";
+                        var typeText = "";
 
-                    switch (obj)
-                    {
-                        case WzConvex2D cvx: typeText = "convex"; break;
-                        case WzList _: 
-                            if (list.IsArray) typeText = "array";
-                            else typeText = "list";
-                            break;
-                        default: throw new Exception("???");
+                        switch (obj)
+                        {
+                            case WzConvex2D cvx: typeText = "convex"; break;
+                            case WzList _:
+                                if (list.IsArray) typeText = "array";
+                                else typeText = "list";
+                                break;
+                            default: throw new Exception("???");
+                        }
+                        WriteFile(subdir, "type.inf", typeText);
+                        break;
                     }
-                    WriteFile(subdir, "type.inf", typeText);
-                    break;
-                }
 
                 case PcomObject po:
-                {
-                    using (var ms = new MemoryStream())
-                    using (var aw = new ArchiveWriter(ms))
                     {
-                        po.Write(aw);
-                        aw.Flush();
-                        WriteFile(dir, po.Name + ".bin", ms.ToArray());
+                        using (var ms = new MemoryStream())
+                        using (var aw = new ArchiveWriter(ms))
+                        {
+                            po.Write(aw);
+                            aw.Flush();
+                            WriteFile(dir, po.Name + ".bin", ms.ToArray());
+                        }
+                        break;
                     }
-                    break;
-                }
             }
         }
 
@@ -786,7 +822,7 @@ namespace MapleManager
 
             var folderBrowserDialog = new FolderSelect.FolderSelectDialog();
             if (folderBrowserDialog.ShowDialog() == false) return;
-            
+
             if (!(sn is WZTreeNode wtn)) return;
             var tag = wtn.WzObject;
             ExportNodes(folderBrowserDialog.FileName, sn.Name, tag);
@@ -798,6 +834,12 @@ namespace MapleManager
             {
                 Process.Start("explorer.exe", LoadedFolderPath);
             }
+        }
+
+        private void copyPathToCurrentNodeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var sn = tvData.SelectedNode;
+            if (sn != null) Clipboard.SetText(sn.FullPath);
         }
     }
 }

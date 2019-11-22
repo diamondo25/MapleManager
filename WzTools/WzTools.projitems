@@ -22,6 +22,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ExtraTools.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\LevelMap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\PixOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\WzPixFormat.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)INameSpaceNode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NameSpaceDirectory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NameSpaceFile.cs" />
@@ -29,9 +30,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Objects\LazyPcomObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Objects\PcomObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Objects\WzConvex2D.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Objects\WzImage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\WzCanvas.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Objects\WzList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Objects\WzProperty.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\WzRawCanvas.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Objects\WzSound.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Objects\WzUOL.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Objects\WzVector2D.cs" />

@@ -219,6 +219,8 @@ namespace MapleManager.WzTools.Package
             ForceCrypto(currentEncryption, true);
         }
 
+        public IWzEncryption GetCurrentEncryption() => currentEncryption;
+
         private void TrySetNopAsDefault()
         {
             if (currentEncryption != null || cryptoLocked) return;
@@ -295,54 +297,6 @@ namespace MapleManager.WzTools.Package
             currentEncryption = best.crypto;
             PutCurrentInFront();
             best.decrypted.CopyTo(contents, 0);
-
-            return;
-
-            if (validate != null && validate(contents))
-            {
-                TrySetNopAsDefault();
-                return;
-            }
-
-            for (var i = 0; i < cryptos.Length; i++)
-            {
-                var copy = GetCopy(contents);
-                var crypto = cryptos[i];
-
-                crypto.Decrypt(copy);
-                if (validate == null || validate(copy))
-                {
-                    var isChanged = validate != null && crypto != currentEncryption;
-
-                    if (isChanged)
-                    {
-                        Console.WriteLine("Found crypto {0}", crypto);
-                        Console.WriteLine("\tString ASCII: {0}", Encoding.ASCII.GetString(contents));
-                        Console.WriteLine("\tString UTF8: {0}", Encoding.UTF8.GetString(contents));
-                        Console.WriteLine("Changed to...");
-                        Console.WriteLine("\tString ASCII: {0}", Encoding.ASCII.GetString(copy));
-                        Console.WriteLine("\tString UTF8: {0}", Encoding.UTF8.GetString(copy));
-                    }
-
-                    // seems to have worked
-                    copy.CopyTo(contents, 0);
-
-                    if (isChanged)
-                    {
-                        currentEncryption = crypto;
-                        if (!cryptoLocked)
-                        {
-                            PutCurrentInFront();
-                        }
-                    }
-
-                    return;
-                }
-            }
-
-            Console.WriteLine("No crypto found for string!");
-            Console.WriteLine("String ASCII: {0}", Encoding.ASCII.GetString(contents));
-            Console.WriteLine("String UTF8: {0}", Encoding.UTF8.GetString(contents));
         }
 
         public void ApplyCrypto(byte[] contents)

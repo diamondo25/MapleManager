@@ -58,6 +58,32 @@
   <PropertyGroup>
     <ApplicationIcon>leatty.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>CODE_ANALYSIS;DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Aga.Controls, Version=1.7.0.0, Culture=neutral, PublicKeyToken=fcc90fbf924463a3, processorArchitecture=MSIL">
       <HintPath>..\packages\TreeViewAdv.1.7.0.0\lib\net\Aga.Controls.dll</HintPath>
@@ -112,8 +138,14 @@
       <DependentUpon>AnimationForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Scripts\Animator\Animator.cs" />
-    <Compile Include="Scripts\Animator\Transparency.cs" />
     <Compile Include="Scripts\Animator\FrameInfo.cs" />
+    <Compile Include="Scripts\Animator\CharacterGenForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Scripts\Animator\CharacterGenForm.Designer.cs">
+      <DependentUpon>CharacterGenForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Scripts\Animator\InventorySlot.cs" />
     <Compile Include="Scripts\Hurr\TestScript.cs" />
     <Compile Include="Scripts\StringsLoader\StringsLoader.cs" />
     <Compile Include="Scripts\TestScript.cs" />
@@ -132,6 +164,7 @@
       <DependentUpon>TextRenderForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Settings.cs" />
+    <Compile Include="TreeNodeExtensions.cs" />
     <Compile Include="Validators\MapValidator.cs" />
     <Compile Include="Validators\WzTreeView.cs" />
     <EmbeddedResource Include="MainForm.resx">
@@ -152,6 +185,9 @@
     </Compile>
     <EmbeddedResource Include="Scripts\Animator\AnimationForm.resx">
       <DependentUpon>AnimationForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Scripts\Animator\CharacterGenForm.resx">
+      <DependentUpon>CharacterGenForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Scripts\TextRenderer\InfoDialog.resx">
       <DependentUpon>InfoDialog.cs</DependentUpon>
@@ -206,6 +242,6 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy /E /C "$(ProjectDir)\Scripts" "Scripts\" /Y
-"$(ProjectDir)\..\FixNamingConflict\bin\$(ConfigurationName)\FixNamingConflict.exe" Scripts</PostBuildEvent>
+"$(ProjectDir)\..\FixNamingConflict\$(OutDir)\FixNamingConflict.exe" Scripts</PostBuildEvent>
   </PropertyGroup>
 </Project>

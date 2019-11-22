@@ -50,7 +50,7 @@ namespace MapleManager.WzTools.Test
 
                     var outProp = new WzProperty();
                     var ar = new ArchiveReader(ms);
-                    // ar.SetEncryption(testEncryption);
+                    ar.SetEncryption(testEncryption);
                     outProp.Read(ar);
 
                     foreach (var kvp in outProp)
@@ -62,7 +62,7 @@ namespace MapleManager.WzTools.Test
                     {
                         Console.WriteLine("Checking key {0} of {1}", kvp.Key, testEncryption);
 
-                        var hasKey = outProp.HasKey(kvp.Key);
+                        var hasKey = outProp.HasChild(kvp.Key);
 
                         Assert.IsTrue(hasKey, $"Missing key {kvp.Key}");
                         if (hasKey)
@@ -92,7 +92,7 @@ namespace MapleManager.WzTools.Test
             var outProp = new WzProperty();
             outProp.Read(new ArchiveReader(ms));
 
-            Assert.IsTrue(outProp.HasKey("sub"));
+            Assert.IsTrue(outProp.HasChild("sub"));
             Assert.IsInstanceOfType(outProp["sub"], typeof(WzProperty));
         }
 
@@ -234,5 +234,6 @@ namespace MapleManager.WzTools.Test
             err = arrayCompare(b, correct);
             if (err != null) throw err;
         }
+
     }
 }

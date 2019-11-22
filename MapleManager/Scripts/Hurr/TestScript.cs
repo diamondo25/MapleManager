@@ -11,6 +11,12 @@ namespace MapleManager.Scripts
 
         public void Start(ScriptNode mainScriptNode)
         {
+            var weaponNode = mainScriptNode.GetNode("Skill/3300.img/skill/33001000/weapon");
+            weaponNode.SetString("Boobs.");
+            weaponNode.UpdateTreeNodes();
+
+            return;
+
             Console.WriteLine("Starting...");
             foreach (var mapNode in mainScriptNode.GetNode("Map/Map"))
             {
@@ -33,7 +39,6 @@ namespace MapleManager.Scripts
                     }
                 }
             }
-            
         }
 
         public void Stop()

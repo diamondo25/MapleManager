@@ -18,7 +18,7 @@ namespace MapleManager.WzTools.FileSystem
                         var node = new FSDirectory();
                         node.Size = 0;
                         node.Name = name;
-                        node.OffsetInFile = -1;
+                        node.OffsetInFile = 0;
                         node.RealPath = folder.FullName;
                         LoadDirectories(node, dir);
 
@@ -43,7 +43,7 @@ namespace MapleManager.WzTools.FileSystem
                         var node = new FSFile();
                         node.Size = (int) file.Length;
                         node.Name = name;
-                        node.OffsetInFile = -1;
+                        node.OffsetInFile = 0;
                         node.RealPath = file.FullName;
                         return node;
                     }

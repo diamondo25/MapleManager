@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Text;
+using MapleManager.WzTools.FileSystem;
 using MapleManager.WzTools.Helpers;
 
 namespace MapleManager.WzTools.Package
@@ -14,6 +17,7 @@ namespace MapleManager.WzTools.Package
 
         public Func<int, uint, int> CalculateOffset { get; set; }
 
+        private MemoryMappedFile memoryMappedFile { get; set; }
         private ArchiveReader Reader { get; set; }
         private uint InternalKey { get; set; }
         private byte InternalHash { get; set; }
@@ -26,18 +30,35 @@ namespace MapleManager.WzTools.Package
         /// </summary>
         private bool ReadLike_deMSwZ { get; set; } = false;
 
-        public WzPackage(string packagePath, string packageKey)
+        public WzPackage(string packagePath, string packageKey, NameSpaceDirectory parent = null)
         {
             Selftest();
 
-            // TODO: Ignore Offset field and just load it sequentually (doesnt require the key)
             PackagePath = packagePath;
-            PackageKey = packageKey;
+            PackageKey = packageKey ?? "";
             CalculateOffset = DecodeOffset;
 
-            Name = Path.GetFileName(packagePath);
+            Name = Path.GetFileNameWithoutExtension(packagePath);
             OffsetInFile = 0;
             Checksum = 0;
+
+            Parent = parent ?? new NameSpaceDirectory()
+            {
+                // Root
+                Name = "",
+                Parent = null,
+                SubDirectories = new List<NameSpaceDirectory> { },
+            };
+            ((NameSpaceDirectory)Parent).SubDirectories.Add(this);
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            Reader?.Close();
+            Reader = null;
+            memoryMappedFile?.Dispose();
+            memoryMappedFile = null;
         }
 
         private void Selftest()
@@ -67,7 +88,7 @@ namespace MapleManager.WzTools.Package
         private int ReadCompressedInt() => Reader.ReadCompressedInt();
 
         private void JumpAndReturn(int offset, Action andNow) => Reader.JumpAndReturn(offset, andNow);
-        
+
         private uint ROL(uint value, byte times) => value << times | value >> (32 - times);
 
         public int DecodeOffset(int currentPosition, uint encryptedOffset)
@@ -96,7 +117,7 @@ namespace MapleManager.WzTools.Package
             Trace.WriteLine("StringAfterHeader: " + str);
 
             // This is the 'end' of the file, beginning of directories
-            EndParsePos = (int) Reader.BaseStream.Position;
+            EndParsePos = (int)Reader.BaseStream.Position;
         }
 
         private int GetFirstOffset()
@@ -126,10 +147,10 @@ namespace MapleManager.WzTools.Package
             {
                 var tmp = (int)Reader.BaseStream.Position;
                 var type = Reader.ReadByte();
-                Debug.Assert(type <= 4, "Invalid type found while parsing directory.");
+                if (type > 4) throw new Exception("Invalid type found while parsing directory.");
                 var isDir = (type & 1) == 1;
 
-                NameSpaceNode node = isDir ? new NameSpaceDirectory() : (NameSpaceNode)new NameSpaceFile();
+                NameSpaceNode node = isDir ? new NameSpaceDirectory() : (NameSpaceNode)new WzFile(this, currentDirectory);
                 node.BeginParsePos = tmp;
 
                 node.Name = Reader.ReadString(type <= 2, ContentsStart + 1);
@@ -151,11 +172,11 @@ namespace MapleManager.WzTools.Package
                 node.EndParsePos = tmp;
                 currentDirectory.Add(node);
 
-#if DEBUG
+#if DEBUG_
                 Console.Write(isDir ? "D" : "F");
                 Console.Write($" {node.Name,-30}: {node.BeginParsePos,-10} - {node.EndParsePos,-10} -");
                 
-                Console.WriteLine(isDir ? node.OffsetInFile.ToString() : "");
+                Console.WriteLine(!isDir ? node.OffsetInFile.ToString() : "");
 #endif
             }
 
@@ -174,7 +195,8 @@ namespace MapleManager.WzTools.Package
 
         public void Process()
         {
-            Reader = new ArchiveReader(File.OpenRead(PackagePath));
+            memoryMappedFile = MemoryMappedFile.CreateFromFile(PackagePath);
+            Reader = new ArchiveReader(memoryMappedFile.CreateViewStream(), 0);
             Size = (int)Reader.BaseStream.Length;
 
             var pkg1 = Reader.ReadChars(4);
@@ -214,7 +236,7 @@ namespace MapleManager.WzTools.Package
 
             if (keyHash != hash && keyHash != ~hash)
             {
-                Console.WriteLine($"Invalid package key. Hash mismatch.");
+                Console.WriteLine($"Invalid package key. Hash mismatch. {keyHash} != {hash}");
 
                 // try to crack, if PackageKey is a number
                 ushort mapleVersion;
@@ -246,7 +268,7 @@ namespace MapleManager.WzTools.Package
                             ProcessDirectory(this);
 
                         }
-                        catch (ArgumentOutOfRangeException ex)
+                        catch (ArgumentOutOfRangeException)
                         {
                             Console.WriteLine($"Its not version {i}.");
                             continue;
@@ -255,10 +277,7 @@ namespace MapleManager.WzTools.Package
 
                         Console.WriteLine($"Cracked as version {i}.");
                         found = true;
-                        return;
-
                     }
-
 
                     Reader.BaseStream.Position = tmp;
                 }
@@ -280,32 +299,47 @@ namespace MapleManager.WzTools.Package
 
             ReadFirstStringAfterHeader(keyHash, hash);
             ProcessDirectory(this);
+
+            if (ReadLike_deMSwZ)
+            {
+                int currentOffset = (int)Reader.BaseStream.Position;
+                FixOffsets(ref currentOffset, this);
+            }
         }
 
-        public void Extract(string outputFolder)
+        // FixOffsets fills in the deMSwZ required offsets
+        private void FixOffsets(ref int currentOffset, NameSpaceDirectory nsd)
         {
-            ExtractDirectory(this, outputFolder);
+            foreach (var nameSpaceFile in nsd.Files)
+            {
+                nameSpaceFile.OffsetInFile = currentOffset;
+                currentOffset += nameSpaceFile.Size;
+            }
+
+            foreach (var nameSpaceDirectory in nsd.SubDirectories)
+            {
+                FixOffsets(ref currentOffset, nameSpaceDirectory);
+            }
         }
+
+        public void Extract(string outputFolder) => ExtractDirectory(this, new DirectoryInfo(outputFolder));
+        public void Extract(DirectoryInfo outputFolder) => ExtractDirectory(this, outputFolder);
 
 
         private static byte[] extractBuffer = new byte[4096];
         private const int MaxBufferSize = 0x800000;
-        public void ExtractDirectory(NameSpaceDirectory pd, string currentOutputFolder)
+
+        public void ExtractDirectory(NameSpaceDirectory pd, DirectoryInfo outputFolder)
         {
-            var dir = Path.Combine(currentOutputFolder, pd.Name);
-
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-
             foreach (var subDirectory in pd.SubDirectories)
             {
-                ExtractDirectory(subDirectory, dir);
+                ExtractDirectory(subDirectory, outputFolder.CreateSubdirectory(subDirectory.Name));
             }
 
             foreach (var file in pd.Files)
             {
                 Reader.BaseStream.Position = file.OffsetInFile;
-                using (var fs = new FileStream(Path.Combine(dir, file.Name), FileMode.Create))
+                using (var fs = new FileStream(Path.Combine(outputFolder.FullName, file.Name), FileMode.Create))
                 {
                     if (extractBuffer.Length < MaxBufferSize && file.Size > extractBuffer.Length)
                     {
@@ -331,6 +365,36 @@ namespace MapleManager.WzTools.Package
                         fs.Write(extractBuffer, 0, blobSize);
                     }
                 }
+            }
+        }
+
+
+        public class WzFile : NameSpaceFile
+        {
+            private readonly WzPackage _package;
+
+            public WzFile(WzPackage package, NameSpaceDirectory parent)
+            {
+                _package = package;
+                Parent = parent;
+            }
+
+
+            private ArchiveReader _reader;
+
+            public override ArchiveReader GetReader()
+            {
+                return _reader ?? (_reader = new ArchiveReader(
+                    _package.memoryMappedFile.CreateViewStream(0, OffsetInFile + Size),
+                    OffsetInFile
+                ));
+            }
+
+            public override void Dispose()
+            {
+                base.Dispose();
+                _reader?.Close();
+                _reader = null;
             }
         }
     }

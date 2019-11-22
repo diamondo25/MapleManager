@@ -37,6 +37,8 @@ namespace MapleManager.Scripts.Animator
 
         private bool paused = false;
 
+        public string FileName { get; set; }
+
         internal void LoadFrames(List<FrameInfo> pictureFrames)
         {
             sw.Reset();
@@ -85,14 +87,14 @@ namespace MapleManager.Scripts.Animator
 
         private void SetFrame(int idx)
         {
-            if (idx >= frames.Count) idx = 0;
+            idx %= frames.Count;
             var frame = frames[idx];
             currentFrame = idx;
             tbFrame.Value = currentFrame;
 
             currentEnd = currentStart + frame.delay;
-            this.Text = string.Format("Frame {0}, x {1} y {2} w {3} h {4}", currentFrame, frame.OffsetX, frame.OffsetY, frame.Width, frame.Height);
-            if (paused) this.Text += " - PAUSED";
+
+            this.Text = FileName + ": " + string.Format("Frame {0}, x {1} y {2} w {3} h {4}" + (paused ? " - PAUSED" : ""), currentFrame, frame.OffsetX, frame.OffsetY, frame.Width, frame.Height);
 
             this.Invalidate();
         }
@@ -108,16 +110,21 @@ namespace MapleManager.Scripts.Animator
         private void AnimationForm_Paint(object sender, PaintEventArgs e)
         {
             var penBlack = new Pen(Color.Black);
-            centerY = (int)(Height * TopOffsetPercentage);
-            centerX = Width / 2;
+            // Correct for the scrollbar size
+            var ch = Height - hScrollBar1.Height;
+            var cw = Width - vScrollBar1.Width;
+
+            centerY = (int)(ch * TopOffsetPercentage);
+            centerX = cw / 2;
+
 
             centerX += (hScrollBar1.Maximum / 2) - hScrollBar1.Value;
             centerY += (vScrollBar1.Maximum / 2) - vScrollBar1.Value;
             var graphics = e.Graphics;
-            
-            graphics.DrawLine(penBlack, 0, centerY, Width, centerY);
 
-            graphics.DrawLine(penBlack, centerX, 0, centerX, Height);
+            graphics.DrawLine(penBlack, 0, centerY, cw, centerY);
+
+            graphics.DrawLine(penBlack, centerX, 0, centerX, ch);
 
             if (frames.Count > currentFrame)
             {
@@ -148,7 +155,7 @@ namespace MapleManager.Scripts.Animator
                     var penBorder = new Pen(Color.Blue);
                     graphics.DrawLines(
                         penBorder,
-                        new []
+                        new[]
                         {
                             correctPoint(lt.X, lt.Y),
                             correctPoint(rb.X, lt.Y),
@@ -251,53 +258,91 @@ namespace MapleManager.Scripts.Animator
 
             var minLeft = bounds.Min(x => x.left);
             var minTop = bounds.Min(x => x.top);
-            var totalBounds = new FrameBounds() { 
+            var totalBounds = new FrameBounds()
+            {
                 left = bounds.Min(x => x.left),
                 top = bounds.Min(x => x.top), // Top of the image
                 right = bounds.Max(x => x.right),
                 bottom = bounds.Max(x => x.bottom), // Bottom of the image
             };
 
-
-            Console.WriteLine("{0} {1}", minLeft, minTop);
-
+            // Make sure that the image is in bounds
             foreach (var fb in bounds)
             {
-                Console.WriteLine(fb.ToString());
                 fb.Move(-minLeft, -minTop);
-                Console.WriteLine(fb.ToString());
             }
 
-            Console.WriteLine("{0} {1}", totalBounds.left, totalBounds.top);
 
             int w = totalBounds.Width;
             int h = totalBounds.Height;
 
-            int minx = 0, miny = 0;
-            
-            using (var gif = new AnimatedGifCreator(outputFile, 0, 0))
+            const bool checkerBoard = true;
+
+            using (var backgroundChecker = new Bitmap(w + 1, h + 1))
             {
-                foreach (var b in bounds)
+
+                const int backgroundCheckerWidth = 8;
+                const int backgroundCheckerHeight = 8;
+
+                using (var b = new Bitmap(backgroundCheckerWidth, backgroundCheckerHeight))
+                {
+                    using (var g = Graphics.FromImage(b))
+                    {
+                        var c1 = new SolidBrush(Color.Gray);
+                        var c2 = new SolidBrush(Color.DarkGray);
+                        var blockWidth = backgroundCheckerWidth / 2;
+                        var blockHeight = backgroundCheckerHeight / 2;
+
+                        g.FillRectangle(c1, 0, 0, blockWidth, blockHeight);
+                        g.FillRectangle(c2, blockWidth, 0, blockWidth, blockHeight);
+                        
+                        g.FillRectangle(c1, blockWidth, blockHeight, blockWidth, blockHeight);
+                        g.FillRectangle(c2, 0, blockHeight, blockWidth, blockHeight);
+
+                    }
+
+                    using (var g = Graphics.FromImage(backgroundChecker))
+                    {
+
+                        var checkersX = (w / backgroundCheckerWidth) + 1;
+                        var checkersY = (h / backgroundCheckerHeight) + 1;
+                        for (int y = 0; y < checkersY; y++)
+                            for (int x = 0; x < checkersX; x++)
+                                g.DrawImage(b, new Point(x * backgroundCheckerWidth, y * backgroundCheckerHeight));
+                    }
+                }
+
+                using (var gif = new AnimatedGifCreator(outputFile, 0, 0))
                 {
                     using (var bm = new Bitmap(w + 1, h + 1))
                     using (var g = Graphics.FromImage(bm))
                     {
+                        foreach (var b in bounds)
+                        {
+                            g.Clear(Color.FromArgb(0));
 
-                        int x = b.left;
-                        int y = b.top;
-                        Console.WriteLine("Drawing image {0} - {1}, {2} - {3}", x, x + b.Width, y, y + b.Height);
+                            if (checkerBoard)
+                            {
+                                g.DrawImageUnscaled(backgroundChecker, 0, 0);
+                            }
 
-                        g.DrawImageUnscaled(
-                            b.frame.Tile,
-                            x,
-                            y
-                        );
-                        
-                        gif.AddFrame(
-                            bm,
-                            b.frame.delay,
-                            GifQuality.Bit8
-                        );
+                            int x = b.left;
+                            int y = b.top;
+                            Console.WriteLine("Drawing image {0} - {1}, {2} - {3}", x, x + b.Width, y, y + b.Height);
+
+                            g.DrawImageUnscaled(
+                                b.frame.Tile,
+                                x,
+                                y
+                            );
+
+
+                            gif.AddFrame(
+                                bm,
+                                b.frame.delay,
+                                GifQuality.Bit8
+                            );
+                        }
                     }
                 }
             }
@@ -308,7 +353,7 @@ namespace MapleManager.Scripts.Animator
             using (var fsd = new SaveFileDialog())
             {
                 fsd.Filter = "GIF|*.gif";
-                fsd.FileName = "Animation.gif";
+                fsd.FileName = FileName + ".gif";
                 if (fsd.ShowDialog() == DialogResult.OK)
                     ToGif(fsd.FileName);
             }
@@ -340,7 +385,6 @@ namespace MapleManager.Scripts.Animator
         {
             Invalidate();
         }
-
         private void vScrollBar1_ValueChanged(object sender, EventArgs e)
         {
             Invalidate();

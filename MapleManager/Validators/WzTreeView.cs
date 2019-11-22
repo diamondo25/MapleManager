@@ -7,7 +7,6 @@ namespace MapleManager.Validators
 {
     static class WzTreeView
     {
-
         private static string[] ExtractPath(string path)
         {
             var pathStack = new Queue<string>();
@@ -53,7 +52,7 @@ namespace MapleManager.Validators
                 if (!found) return default(T);
             }
 
-            return currentNode.Tag as T;
+            return currentNode as T;
         }
     }
 }

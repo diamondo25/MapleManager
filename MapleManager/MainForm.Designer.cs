@@ -77,6 +77,7 @@
             this.cutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pasteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fullyLoadThisToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.copyPathToCurrentNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.scDataTreeAndContent)).BeginInit();
@@ -181,8 +182,8 @@
             // 
             this.scTextBoxes.Panel2.Controls.Add(this.txtInfoBoxNormalized);
             this.scTextBoxes.Panel2.Controls.Add(this.label2);
-            this.scTextBoxes.Size = new System.Drawing.Size(684, 214);
-            this.scTextBoxes.SplitterDistance = 341;
+            this.scTextBoxes.Size = new System.Drawing.Size(678, 214);
+            this.scTextBoxes.SplitterDistance = 338;
             this.scTextBoxes.TabIndex = 6;
             // 
             // txtInfoBox
@@ -194,7 +195,7 @@
             this.txtInfoBox.Name = "txtInfoBox";
             this.txtInfoBox.ReadOnly = true;
             this.txtInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtInfoBox.Size = new System.Drawing.Size(335, 195);
+            this.txtInfoBox.Size = new System.Drawing.Size(332, 195);
             this.txtInfoBox.TabIndex = 0;
             // 
             // label1
@@ -215,7 +216,7 @@
             this.txtInfoBoxNormalized.Name = "txtInfoBoxNormalized";
             this.txtInfoBoxNormalized.ReadOnly = true;
             this.txtInfoBoxNormalized.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtInfoBoxNormalized.Size = new System.Drawing.Size(333, 195);
+            this.txtInfoBoxNormalized.Size = new System.Drawing.Size(330, 195);
             this.txtInfoBoxNormalized.TabIndex = 1;
             // 
             // label2
@@ -237,7 +238,7 @@
             this.panel1.Controls.Add(this.pbNodeImage);
             this.panel1.Location = new System.Drawing.Point(3, 252);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(684, 254);
+            this.panel1.Size = new System.Drawing.Size(678, 254);
             this.panel1.TabIndex = 5;
             // 
             // pbNodeImage
@@ -245,7 +246,7 @@
             this.pbNodeImage.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pbNodeImage.Location = new System.Drawing.Point(0, 0);
             this.pbNodeImage.Name = "pbNodeImage";
-            this.pbNodeImage.Size = new System.Drawing.Size(684, 254);
+            this.pbNodeImage.Size = new System.Drawing.Size(678, 254);
             this.pbNodeImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pbNodeImage.TabIndex = 0;
             this.pbNodeImage.TabStop = false;
@@ -289,7 +290,7 @@
             this.wZToolStripMenuItem,
             this.tsmiLoadDirectory});
             this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
-            this.loadToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+            this.loadToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
             this.loadToolStripMenuItem.Text = "Load";
             // 
             // wZToolStripMenuItem
@@ -309,7 +310,7 @@
             // openFolderInExplorerToolStripMenuItem
             // 
             this.openFolderInExplorerToolStripMenuItem.Name = "openFolderInExplorerToolStripMenuItem";
-            this.openFolderInExplorerToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+            this.openFolderInExplorerToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
             this.openFolderInExplorerToolStripMenuItem.Text = "Open folder in explorer";
             this.openFolderInExplorerToolStripMenuItem.Visible = false;
             this.openFolderInExplorerToolStripMenuItem.Click += new System.EventHandler(this.OpenFolderInExplorerToolStripMenuItem_Click);
@@ -317,14 +318,14 @@
             // extractWZToolStripMenuItem
             // 
             this.extractWZToolStripMenuItem.Name = "extractWZToolStripMenuItem";
-            this.extractWZToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+            this.extractWZToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
             this.extractWZToolStripMenuItem.Text = "Extract WZ";
             this.extractWZToolStripMenuItem.Click += new System.EventHandler(this.extractWZToolStripMenuItem_Click);
             // 
             // fileToolStripSeperator
             // 
             this.fileToolStripSeperator.Name = "fileToolStripSeperator";
-            this.fileToolStripSeperator.Size = new System.Drawing.Size(192, 6);
+            this.fileToolStripSeperator.Size = new System.Drawing.Size(193, 6);
             // 
             // modifyToolStripMenuItem
             // 
@@ -332,6 +333,7 @@
             this.copyToolStripMenuItem1,
             this.cutToolStripMenuItem1,
             this.pasteToolStripMenuItem1,
+            this.copyPathToCurrentNodeToolStripMenuItem,
             this.copyImageToClipboardToolStripMenuItem,
             this.saveImageToolStripMenuItem,
             this.flatsportToolStripMenuItem});
@@ -344,7 +346,7 @@
             this.copyToolStripMenuItem1.Enabled = false;
             this.copyToolStripMenuItem1.Name = "copyToolStripMenuItem1";
             this.copyToolStripMenuItem1.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
-            this.copyToolStripMenuItem1.Size = new System.Drawing.Size(205, 22);
+            this.copyToolStripMenuItem1.Size = new System.Drawing.Size(214, 22);
             this.copyToolStripMenuItem1.Text = "Copy";
             // 
             // cutToolStripMenuItem1
@@ -352,7 +354,7 @@
             this.cutToolStripMenuItem1.Enabled = false;
             this.cutToolStripMenuItem1.Name = "cutToolStripMenuItem1";
             this.cutToolStripMenuItem1.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.X)));
-            this.cutToolStripMenuItem1.Size = new System.Drawing.Size(205, 22);
+            this.cutToolStripMenuItem1.Size = new System.Drawing.Size(214, 22);
             this.cutToolStripMenuItem1.Text = "Cut";
             // 
             // pasteToolStripMenuItem1
@@ -360,27 +362,27 @@
             this.pasteToolStripMenuItem1.Enabled = false;
             this.pasteToolStripMenuItem1.Name = "pasteToolStripMenuItem1";
             this.pasteToolStripMenuItem1.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.P)));
-            this.pasteToolStripMenuItem1.Size = new System.Drawing.Size(205, 22);
+            this.pasteToolStripMenuItem1.Size = new System.Drawing.Size(214, 22);
             this.pasteToolStripMenuItem1.Text = "Paste";
             // 
             // copyImageToClipboardToolStripMenuItem
             // 
             this.copyImageToClipboardToolStripMenuItem.Name = "copyImageToClipboardToolStripMenuItem";
-            this.copyImageToClipboardToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.copyImageToClipboardToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.copyImageToClipboardToolStripMenuItem.Text = "Copy image to clipboard";
             this.copyImageToClipboardToolStripMenuItem.Click += new System.EventHandler(this.copyImageToClipboardToolStripMenuItem_Click);
             // 
             // saveImageToolStripMenuItem
             // 
             this.saveImageToolStripMenuItem.Name = "saveImageToolStripMenuItem";
-            this.saveImageToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.saveImageToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.saveImageToolStripMenuItem.Text = "Save image";
             this.saveImageToolStripMenuItem.Click += new System.EventHandler(this.saveImageToolStripMenuItem_Click);
             // 
             // flatsportToolStripMenuItem
             // 
             this.flatsportToolStripMenuItem.Name = "flatsportToolStripMenuItem";
-            this.flatsportToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.flatsportToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.flatsportToolStripMenuItem.Text = "Flatsport";
             this.flatsportToolStripMenuItem.Click += new System.EventHandler(this.flatsportToolStripMenuItem_Click);
             // 
@@ -390,7 +392,7 @@
             this.validateToolStripMenuItem,
             this.scriptsToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
             // 
             // validateToolStripMenuItem
@@ -497,6 +499,13 @@
             this.fullyLoadThisToolStripMenuItem.Text = "Fully load this";
             this.fullyLoadThisToolStripMenuItem.Click += new System.EventHandler(this.fullyLoadThisToolStripMenuItem_Click);
             // 
+            // copyPathToCurrentNodeToolStripMenuItem
+            // 
+            this.copyPathToCurrentNodeToolStripMenuItem.Name = "copyPathToCurrentNodeToolStripMenuItem";
+            this.copyPathToCurrentNodeToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
+            this.copyPathToCurrentNodeToolStripMenuItem.Text = "Copy path to current node";
+            this.copyPathToCurrentNodeToolStripMenuItem.Click += new System.EventHandler(this.copyPathToCurrentNodeToolStripMenuItem_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -580,6 +589,7 @@
         private System.Windows.Forms.ToolStripSeparator fileToolStripSeperator;
         private System.Windows.Forms.ToolStripMenuItem flatsportToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openFolderInExplorerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem copyPathToCurrentNodeToolStripMenuItem;
     }
 }
 

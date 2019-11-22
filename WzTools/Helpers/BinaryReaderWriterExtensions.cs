@@ -89,7 +89,7 @@ namespace MapleManager.WzTools
             }
         }
 
-        public static string ReadString(this BinaryReader reader, byte id, byte existingID, byte newID, int contentsStart = 0)
+        public static string ReadStringWithID(this BinaryReader reader, byte id, byte existingID, byte newID, int contentsStart = 0)
         {
             if (id == newID)
             {
@@ -106,7 +106,7 @@ namespace MapleManager.WzTools
         public static string ReadString(this BinaryReader reader, byte existingID, byte newID, int contentsStart = 0)
         {
             var p = reader.ReadByte();
-            return reader.ReadString(p, existingID, newID, contentsStart);
+            return reader.ReadStringWithID(p, existingID, newID, contentsStart);
         }
 
         private static string ReadDeDuplicatedString(this BinaryReader reader, int contentsStart = 0)

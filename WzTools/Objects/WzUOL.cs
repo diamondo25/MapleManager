@@ -14,8 +14,8 @@ namespace MapleManager.WzTools.Objects
 
         public override void Read(ArchiveReader reader)
         {
-            Debug.Assert(reader.ReadByte() == 0);
-            Path = reader.ReadString(1, 0, 0);
+            if (reader.ReadByte() != 0) throw new Exception("Expected 0 is not zero");
+            Path = reader.ReadString(1, 0);
         }
 
         public override void Write(ArchiveWriter writer)

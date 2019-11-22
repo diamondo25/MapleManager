@@ -7,7 +7,7 @@ namespace MapleManager.Scripts.Animator
     internal class FrameInfo : IDisposable
     {
         public int OffsetX, OffsetY, Width, Height;
-        public WzImage Data;
+        public WzCanvas Data;
         public Image Tile;
         public int delay;
         public bool CustomImage;

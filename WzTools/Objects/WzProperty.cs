@@ -108,10 +108,8 @@ namespace MapleManager.WzTools.Objects
 
         public string GetString(string key) => this[key].ToString();
 
-        public bool HasKey(string key) => _objects.ContainsKey(key);
-        
-        public override bool HasChild(string key) => HasKey(key);
-        
+        public override bool HasChild(string key) => _objects.ContainsKey(key);
+
         public override void Read(ArchiveReader reader)
         {
             var b = reader.ReadByte();
@@ -120,8 +118,7 @@ namespace MapleManager.WzTools.Objects
                 reader.BaseStream.Position -= 1;
                 _objects = new Dictionary<string, object>();
                 // Note: do not use disposing, as it would dispose the stream
-                var sr = new StringReader(Encoding.ASCII.GetString(reader.ReadBytes(BlobSize)));
-                parse_ascii(sr);
+                parse_ascii(new StringReader(Encoding.ASCII.GetString(reader.ReadBytes(BlobSize))));
             }
             else
             {
@@ -130,7 +127,7 @@ namespace MapleManager.WzTools.Objects
                 _objects = new Dictionary<string, object>(amount);
                 for (var i = 0; i < amount; i++)
                 {
-                    var name = reader.ReadString(1, 0, 0);
+                    var name = reader.ReadString(1, 0);
                     var type = (WzVariantType)reader.ReadByte();
 
                     if (type == WzVariantType.DispatchVariant)
@@ -161,7 +158,7 @@ namespace MapleManager.WzTools.Objects
                             break;
 
                         case WzVariantType.BStrVariant:
-                            obj = reader.ReadString(1, 0, 0);
+                            obj = reader.ReadString(1, 0);
                             break;
 
                         case WzVariantType.DateVariant: obj = DateTime.FromFileTime(reader.ReadInt64()); break;
@@ -329,7 +326,7 @@ namespace MapleManager.WzTools.Objects
             _objects.TryGetValue(key, out var x);
             return x;
         }
-        
+
         public bool HasMembers => _objects.Count > 0;
 
         public IEnumerator<KeyValuePair<string, object>> GetEnumerator() => _objects.GetEnumerator();
@@ -338,7 +335,7 @@ namespace MapleManager.WzTools.Objects
 
         #region ASCII Loading
 
-        
+
 
         // In the Wvs logic, 's' is the key, and 'v' is the value
 
@@ -462,7 +459,7 @@ namespace MapleManager.WzTools.Objects
                     s = isBlockStartStop;
                 }
                 s = escape_str(s);
-                
+
 
                 // The code does not check if you actually filled in a variable!
 

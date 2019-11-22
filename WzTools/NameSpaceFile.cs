@@ -2,6 +2,7 @@
 using System.IO;
 using MapleManager.WzTools.Helpers;
 using MapleManager.WzTools.Objects;
+using MapleManager.WzTools.Package;
 
 namespace MapleManager.WzTools
 {
@@ -19,6 +20,8 @@ namespace MapleManager.WzTools
 
         protected PcomObject _obj = null;
 
+        public IWzEncryption UsedEncryption = null;
+
         public PcomObject Object
         {
             get
@@ -26,27 +29,28 @@ namespace MapleManager.WzTools
                 if (_obj == null)
                 {
                     var reader = GetReader();
+                    reader.BaseStream.Position = OffsetInFile;
+                    
                     PcomObject.PrepareEncryption(reader);
-                    _obj = PcomObject.LoadFromBlob(reader, (int)Size, null, true);
+                    
+                    _obj = PcomObject.LoadFromBlob(reader, Size, null, true);
+
                     if (_obj != null && _obj is WzFileProperty wfp)
                     {
+                        UsedEncryption = reader.GetCurrentEncryption();
                         wfp.Name = Name;
                         wfp.FileNode = this;
-
-                        if (false)
-                        {
-                            using (var fw = File.OpenWrite(Path.Combine(Environment.CurrentDirectory, "output.img")))
-                            using (var aw = new ArchiveWriter(fw))
-                            {
-                                PcomObject.WriteToBlob(aw, _obj);
-                            }
-                        }
-
                     }
                 }
                 return _obj;
             }
             set => _obj = value;
+        }
+
+
+        public void Unload()
+        {
+            _obj = null;
         }
 
         public override object GetChild(string key) => Object?[key];

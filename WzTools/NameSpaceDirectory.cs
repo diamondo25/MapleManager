@@ -39,12 +39,27 @@ namespace MapleManager.WzTools
         public override object GetChild(string key)
         {
             object ret = null;
-            if (ret == null) ret = Files.Find(x => x.Name.ToLower() == key.ToLower());
-            if (ret == null) ret = Files.Find(x => x.Name.ToLower() == (key + ".img").ToLower());
-            if (ret == null) ret = SubDirectories.Find(x => x.Name.ToLower() == key.ToLower());
+            if (ret == null) 
+                ret = Files.Find(x => x.Name.ToLower() == key.ToLower());
+
+            if (ret == null && !key.EndsWith(".img"))
+                ret = Files.Find(x => x.Name.ToLower() == (key + ".img").ToLower());
+
+            if (ret == null) 
+                ret = SubDirectories.Find(x => x.Name.ToLower() == key.ToLower());
 
             if (ret is NameSpaceFile nsf) ret = nsf.Object;
             return ret;
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            SubDirectories?.Clear();
+            SubDirectories = null;
+            Files?.Clear();
+            Files = null;
         }
     }
 }

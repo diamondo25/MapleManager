@@ -8,6 +8,8 @@ namespace MapleManager.WzTools.Objects
     public abstract class PcomObject : INameSpaceNode
     {
         public PcomObject Parent = null;
+
+        public string GetName() => Name;
         
         public string Name { get; set; }
 
@@ -29,7 +31,7 @@ namespace MapleManager.WzTools.Objects
             }
             else
             {
-                string type = reader.ReadString(t, 0x1B, 0x73, 0);
+                string type = reader.ReadStringWithID(t, 0x1B, 0x73);
                 switch (type)
                 {
                     // Only a Property is valid on this level
@@ -77,7 +79,7 @@ namespace MapleManager.WzTools.Objects
             }
             else
             {
-                type = reader.ReadString(t, 0x1B, 0x73, 0);
+                type = reader.ReadStringWithID(t, 0x1B, 0x73);
             }
 
             switch (type)
@@ -90,7 +92,7 @@ namespace MapleManager.WzTools.Objects
                 case "Shape2D#Vector2D": obj = new WzVector2D(); break;
                 case "Shape2D#Convex2D": obj = new WzConvex2D(); break;
                 case "Sound_DX8": obj = new WzSound(); break;
-                case "Canvas": obj = new WzImage(); break;
+                case "Canvas": obj = new WzCanvas(); break;
                 default:
                     Console.WriteLine("Don't know how to read this proptype: {0}", type);
                     return null;
@@ -114,7 +116,7 @@ namespace MapleManager.WzTools.Objects
             switch (obj)
             {
                 case WzConvex2D x: writeType("Shape2D#Convex2D"); break;
-                case WzImage x: writeType("Canvas"); break;
+                case WzCanvas x: writeType("Canvas"); break;
                 case WzProperty x: writeType("Property"); break;
                 case WzList x: writeType("List"); break;
                 case WzUOL x: writeType("UOL"); break;
@@ -138,11 +140,11 @@ namespace MapleManager.WzTools.Objects
         public string GetFullPath()
         {
             string ret = Name;
-            var curParent = Parent;
+            INameSpaceNode curParent = (INameSpaceNode)GetParent();
             while (curParent != null)
             {
-                ret = curParent.Name + "/" + ret;
-                curParent = curParent.Parent;
+                ret = curParent.GetName() + "/" + ret;
+                curParent = (INameSpaceNode)curParent.GetParent();
             }
 
             return ret;
@@ -156,6 +158,5 @@ namespace MapleManager.WzTools.Objects
         public virtual object GetParent() => Parent;
 
         public object GetChild(string key) => Get(key);
-
     }
 }
