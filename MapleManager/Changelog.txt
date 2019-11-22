@@ -1,3 +1,10 @@
+1.1:
+- Improve animator
+- Add character renderer
+- Add default/fallback option in ScriptNode Get* functions
+- Add WZ mounting support
+- Split up WZTreeNode and ScriptNode/PcomObjects, but you can still query through the NameSpace
+
 1.0.2.0:
 - Add animation screen
 - Replace FolderSelectDialog with win7 style dialog
