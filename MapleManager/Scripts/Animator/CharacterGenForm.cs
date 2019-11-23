@@ -21,6 +21,8 @@ namespace MapleManager.Scripts.Animator
         private void CharacterGenForm_Load(object sender, System.EventArgs e)
         {
             this.UseWaitCursor = true;
+            allPossibleItems = new TreeView();
+            allPossibleItems.PathSeparator = itemSelectionTree.PathSeparator;
             new Thread(LoadData).Start();
         }
 
@@ -103,7 +105,11 @@ namespace MapleManager.Scripts.Animator
 
         private void LoadData()
         {
-            Invoke((MethodInvoker)delegate { itemSelectionTree.BeginUpdate(); });
+            if (_mainNode.GetNode("Base/zmap.img") == null)
+            {
+                MessageBox.Show("Unable to load Character Gen Form, please load Base, Character and String folders/wzs");
+                return;
+            }
 
             LoadBlock("zmap.img", delegate
             {
@@ -130,7 +136,7 @@ namespace MapleManager.Scripts.Animator
             LoadBlock("Skins", delegate
             {
                 TreeNode skinNode = null;
-                Invoke((MethodInvoker)delegate { skinNode = itemSelectionTree.Nodes.Add("Skin"); });
+                Invoke((MethodInvoker)delegate { skinNode = allPossibleItems.Nodes.Add("Skin"); });
                 foreach (var sn in _mainNode.GetNode("Character/"))
                 {
                     if (!sn.Name.EndsWith(".img")) continue;
@@ -141,15 +147,15 @@ namespace MapleManager.Scripts.Animator
                     if (!int.TryParse(nameWithoutZeroes, out id)) continue;
 
                     Invoke((MethodInvoker)delegate
-                   {
-                       var node = skinNode.Nodes.Add("Skin color " + (id % 1000));
-                       node.Tag = new ChosenItem
-                       {
-                           SelectedPath = node.FullPath,
-                           NodePath = sn.GetFullPath(),
-                           ID = (id % 1000),
-                       };
-                   });
+                    {
+                        var node = skinNode.Nodes.Add("Skin color " + (id % 1000));
+                        node.Tag = new ChosenItem
+                        {
+                            SelectedPath = node.FullPath,
+                            NodePath = sn.GetFullPath(),
+                            ID = (id % 1000),
+                        };
+                    });
                 }
             });
 
@@ -171,17 +177,17 @@ namespace MapleManager.Scripts.Animator
                 if (scriptnodeToProcess != null)
                 {
                     Invoke((MethodInvoker)delegate
-                   {
-                       LoadScriptNodeToTreeView(scriptnodeToProcess, itemSelectionTree.Nodes);
-                   });
+                    {
+                        LoadScriptNodeToTreeView(scriptnodeToProcess, allPossibleItems.Nodes);
+                    });
                 }
             });
 
             Invoke((MethodInvoker)delegate
-           {
-               itemSelectionTree.EndUpdate();
-               UseWaitCursor = false;
-           });
+            {
+                filterNodes();
+                UseWaitCursor = false;
+            });
         }
 
 
@@ -605,34 +611,11 @@ namespace MapleManager.Scripts.Animator
             return ret;
         }
 
-        public Dictionary<string, Point> _positionMap = new Dictionary<string, Point>();
-
-        private Point ProcessPositionFromVector(ScriptNode vec, out bool isNew)
-        {
-            var x = vec.GetInt32("x");
-            var y = vec.GetInt32("y");
-            if (!_positionMap.ContainsKey(vec.Name))
-            {
-                isNew = true;
-                return _positionMap[vec.Name] = new Point(x, y);
-            }
-
-            isNew = false;
-            var curValue = _positionMap[vec.Name];
-
-            return new Point(
-                curValue.X - x,
-                curValue.Y - y
-            );
-        }
-
         private bool blockRendering = false;
 
         private void RenderCurrentlySelectedItems(object sender, EventArgs e)
         {
             if (blockRendering) return;
-
-            _positionMap.Clear();
 
             var skinId = 0;
             var stance = "stand1"; // TODO: Fix for 2h
@@ -640,10 +623,7 @@ namespace MapleManager.Scripts.Animator
             var stanceFrame = 0;
             var stanceUol = stance + "/" + stanceFrame + "/";
             var itemNodes = new List<ScriptNode>();
-            var renderedNodes = new Dictionary<string, List<SpriteSource>>();
-
             string earType = "normal";
-            bool foundHidingCap = false;
 
             foreach (var lbi in selectedItems.Items)
             {
@@ -669,11 +649,7 @@ namespace MapleManager.Scripts.Animator
 
             var actionFrame = new ActionFrame();
 
-            var bodyNode = _mainNode.GetNode(string.Format("Character/{0:D8}.img", 2000 + skinId));
-            bool isNewPosition;
-            ProcessPositionFromVector(bodyNode.GetNode(stanceUol + "/body/map/navel"), out isNewPosition);
-
-            itemNodes.Insert(0, bodyNode);
+            itemNodes.Insert(0, _mainNode.GetNode(string.Format("Character/{0:D8}.img", 2000 + skinId)));
             itemNodes.Insert(1, _mainNode.GetNode(string.Format("Character/{0:D8}.img", 12000 + skinId)));
 
             // Load all items and their positions
@@ -736,30 +712,7 @@ namespace MapleManager.Scripts.Animator
 
                     var mapNodes = imageNode.GetNode("map");
                     if (mapNodes == null) continue;
-
-                    var zLayer = imageNode.GetString("z");
-                    var curX = 0;
-                    var curY = 0;
-                    foreach (var mapNode in mapNodes)
-                    {
-                        var x = mapNode.GetInt32("x");
-                        var y = mapNode.GetInt32("y");
-                        if (!_positionMap.ContainsKey(mapNode.Name))
-                        {
-                            _positionMap[mapNode.Name] = new Point(curX + x, curY + y);
-                        }
-                        else
-                        {
-                            var existingMap = _positionMap[mapNode.Name];
-                            curX = existingMap.X - x;
-                            curY = existingMap.Y - y;
-                        }
-                    }
-
-
-                    if (!renderedNodes.ContainsKey(zLayer))
-                        renderedNodes[zLayer] = new List<SpriteSource>();
-
+                    
                     var vslot = infoNode.GetString("vslot");
                     var islot = infoNode.GetString("islot");
 
@@ -767,23 +720,6 @@ namespace MapleManager.Scripts.Animator
                     if (vslot == null || islot == null) continue;
 
                     actionFrame.Merge(islot, vslot, imageNode);
-
-
-                    renderedNodes[zLayer].Add(new SpriteSource(
-                        imageNode,
-                        new Point(curX, curY),
-                        category,
-                        islot,
-                        vslot
-                    ));
-
-                    if (islot.Contains("Cp") && vslot.Contains("H1"))
-                    {
-                        foundHidingCap = true;
-                    }
-
-                    Console.WriteLine("Adding item {0} category {1} with vslot {2} and islot {3} node path {4}",
-                        item.Name, imageNode.Name, vslot, islot, item.GetFullPath());
                 }
             }
 
@@ -795,31 +731,6 @@ namespace MapleManager.Scripts.Animator
             {
                 var centerX = bm.Width / 2;
                 var centerY = (int)(bm.Height - (bm.Height * 0.20));
-
-                centerX -= 50;
-
-                foreach (var s in zmap)
-                {
-                    if (!renderedNodes.ContainsKey(s)) continue;
-
-                    foreach (var data in renderedNodes[s])
-                    {
-                        var x = data.Position.X - data.Canvas.CenterX;
-                        var y = data.Position.Y - data.Canvas.CenterY;
-
-                        Console.WriteLine("Rendering {0} {1} {2}", data.Canvas.GetFullPath(), x, y);
-
-                        x += centerX;
-                        y += centerY;
-
-                        if (data.Category == "hairOverHead" && foundHidingCap) continue;
-
-                        g.DrawImage(data.Canvas.Tile, x, y);
-                    }
-                }
-
-                centerX += 100;
-                Console.WriteLine("-- new mode --");
 
                 foreach (var si in actionFrame.Sprites.Where(x => x.Visible))
                 {
@@ -867,6 +778,8 @@ namespace MapleManager.Scripts.Animator
             return x.GetInt32("info/cash", 0) != 0;
         }
 
+        private TreeView allPossibleItems;
+
         private void button2_Click(object sender, EventArgs e)
         {
             selectedItems.Items.Clear();
@@ -883,7 +796,7 @@ namespace MapleManager.Scripts.Animator
             UpdateToolstrip(string.Format("Generating {0} with {1} longcoat with {2} cash equips", job,
                 longcoat ? "a" : "no", cashEquips ? "" : "no"));
 
-            foreach (TreeNode tns in itemSelectionTree.Nodes)
+            foreach (TreeNode tns in allPossibleItems.Nodes)
             {
                 var category = tns.Text;
                 if (category == "Longcoat" && !longcoat) continue;
@@ -910,11 +823,53 @@ namespace MapleManager.Scripts.Animator
                     }
                 }
             }
-
-            itemSelectionTree.SelectedNode = null;
-
+            
             blockRendering = false;
             RenderCurrentlySelectedItems(null, null);
+        }
+
+        private void selectionFilter_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar != (char) Keys.Enter) return;
+
+
+            filterNodes();
+        }
+
+        private static TreeNode GetClone(TreeNode tn)
+        {
+            return new TreeNode
+            {
+                Text = tn.Text,
+                Name = tn.Name,
+                Tag = tn.Tag,
+            };
+        }
+
+        private void filterNodes()
+        {
+            var text = selectionFilter.Text;
+            itemSelectionTree.BeginUpdate();
+            itemSelectionTree.Nodes.Clear();
+            foreach (TreeNode mainNode in allPossibleItems.Nodes)
+            {
+                var newNode = GetClone(mainNode);
+                itemSelectionTree.Nodes.Add(newNode);
+                filterSubnodes(mainNode.Nodes, newNode.Nodes, text);
+            }
+
+            itemSelectionTree.EndUpdate();
+        }
+
+        private void filterSubnodes(TreeNodeCollection input, TreeNodeCollection output, string text)
+        {
+            foreach (TreeNode tn in input)
+            {
+                if (text == "" || tn.Text.ToLower().Contains(text.ToLower()))
+                {
+                    output.Add(GetClone(tn));
+                }
+            }
         }
     }
 }

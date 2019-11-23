@@ -58,6 +58,7 @@
             this.copyToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.cutToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.pasteToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.copyPathToCurrentNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyImageToClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.flatsportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -77,7 +78,7 @@
             this.cutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pasteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fullyLoadThisToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.copyPathToCurrentNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mapleStoryInstallationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.scDataTreeAndContent)).BeginInit();
@@ -182,8 +183,8 @@
             // 
             this.scTextBoxes.Panel2.Controls.Add(this.txtInfoBoxNormalized);
             this.scTextBoxes.Panel2.Controls.Add(this.label2);
-            this.scTextBoxes.Size = new System.Drawing.Size(678, 214);
-            this.scTextBoxes.SplitterDistance = 338;
+            this.scTextBoxes.Size = new System.Drawing.Size(672, 214);
+            this.scTextBoxes.SplitterDistance = 335;
             this.scTextBoxes.TabIndex = 6;
             // 
             // txtInfoBox
@@ -195,7 +196,7 @@
             this.txtInfoBox.Name = "txtInfoBox";
             this.txtInfoBox.ReadOnly = true;
             this.txtInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtInfoBox.Size = new System.Drawing.Size(332, 195);
+            this.txtInfoBox.Size = new System.Drawing.Size(329, 195);
             this.txtInfoBox.TabIndex = 0;
             // 
             // label1
@@ -216,7 +217,7 @@
             this.txtInfoBoxNormalized.Name = "txtInfoBoxNormalized";
             this.txtInfoBoxNormalized.ReadOnly = true;
             this.txtInfoBoxNormalized.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtInfoBoxNormalized.Size = new System.Drawing.Size(330, 195);
+            this.txtInfoBoxNormalized.Size = new System.Drawing.Size(327, 195);
             this.txtInfoBoxNormalized.TabIndex = 1;
             // 
             // label2
@@ -238,7 +239,7 @@
             this.panel1.Controls.Add(this.pbNodeImage);
             this.panel1.Location = new System.Drawing.Point(3, 252);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(678, 254);
+            this.panel1.Size = new System.Drawing.Size(672, 254);
             this.panel1.TabIndex = 5;
             // 
             // pbNodeImage
@@ -246,7 +247,7 @@
             this.pbNodeImage.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pbNodeImage.Location = new System.Drawing.Point(0, 0);
             this.pbNodeImage.Name = "pbNodeImage";
-            this.pbNodeImage.Size = new System.Drawing.Size(678, 254);
+            this.pbNodeImage.Size = new System.Drawing.Size(672, 254);
             this.pbNodeImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pbNodeImage.TabIndex = 0;
             this.pbNodeImage.TabStop = false;
@@ -288,7 +289,8 @@
             // 
             this.loadToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.wZToolStripMenuItem,
-            this.tsmiLoadDirectory});
+            this.tsmiLoadDirectory,
+            this.mapleStoryInstallationToolStripMenuItem});
             this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
             this.loadToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
             this.loadToolStripMenuItem.Text = "Load";
@@ -296,14 +298,14 @@
             // wZToolStripMenuItem
             // 
             this.wZToolStripMenuItem.Name = "wZToolStripMenuItem";
-            this.wZToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+            this.wZToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
             this.wZToolStripMenuItem.Text = "WZ";
             this.wZToolStripMenuItem.Click += new System.EventHandler(this.wZToolStripMenuItem_Click);
             // 
             // tsmiLoadDirectory
             // 
             this.tsmiLoadDirectory.Name = "tsmiLoadDirectory";
-            this.tsmiLoadDirectory.Size = new System.Drawing.Size(122, 22);
+            this.tsmiLoadDirectory.Size = new System.Drawing.Size(195, 22);
             this.tsmiLoadDirectory.Text = "Directory";
             this.tsmiLoadDirectory.Click += new System.EventHandler(this.tsmiLoadDirectory_Click);
             // 
@@ -364,6 +366,13 @@
             this.pasteToolStripMenuItem1.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.P)));
             this.pasteToolStripMenuItem1.Size = new System.Drawing.Size(214, 22);
             this.pasteToolStripMenuItem1.Text = "Paste";
+            // 
+            // copyPathToCurrentNodeToolStripMenuItem
+            // 
+            this.copyPathToCurrentNodeToolStripMenuItem.Name = "copyPathToCurrentNodeToolStripMenuItem";
+            this.copyPathToCurrentNodeToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
+            this.copyPathToCurrentNodeToolStripMenuItem.Text = "Copy path to current node";
+            this.copyPathToCurrentNodeToolStripMenuItem.Click += new System.EventHandler(this.copyPathToCurrentNodeToolStripMenuItem_Click);
             // 
             // copyImageToClipboardToolStripMenuItem
             // 
@@ -499,12 +508,12 @@
             this.fullyLoadThisToolStripMenuItem.Text = "Fully load this";
             this.fullyLoadThisToolStripMenuItem.Click += new System.EventHandler(this.fullyLoadThisToolStripMenuItem_Click);
             // 
-            // copyPathToCurrentNodeToolStripMenuItem
+            // mapleStoryInstallationToolStripMenuItem
             // 
-            this.copyPathToCurrentNodeToolStripMenuItem.Name = "copyPathToCurrentNodeToolStripMenuItem";
-            this.copyPathToCurrentNodeToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
-            this.copyPathToCurrentNodeToolStripMenuItem.Text = "Copy path to current node";
-            this.copyPathToCurrentNodeToolStripMenuItem.Click += new System.EventHandler(this.copyPathToCurrentNodeToolStripMenuItem_Click);
+            this.mapleStoryInstallationToolStripMenuItem.Name = "mapleStoryInstallationToolStripMenuItem";
+            this.mapleStoryInstallationToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+            this.mapleStoryInstallationToolStripMenuItem.Text = "MapleStory Installation";
+            this.mapleStoryInstallationToolStripMenuItem.Click += new System.EventHandler(this.mapleStoryInstallationToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -590,6 +599,7 @@
         private System.Windows.Forms.ToolStripMenuItem flatsportToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openFolderInExplorerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem copyPathToCurrentNodeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem mapleStoryInstallationToolStripMenuItem;
     }
 }
 

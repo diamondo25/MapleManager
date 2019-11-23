@@ -91,6 +91,7 @@ namespace MapleManager
                 fileToolStripMenuItem.DropDownItems.Add(tsmi);
                 i++;
             }
+
             if (i == 1)
             {
                 // Nothing changed.
@@ -142,7 +143,6 @@ namespace MapleManager
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
             var tsmi = scriptsToolStripMenuItem;
 
             void addScript(string scriptName, string path)
@@ -195,7 +195,7 @@ namespace MapleManager
                 addScript(scriptDir.Name, scriptDir.FullName);
             }
 
-            new Animator().Start(_mainScriptNode);
+            // new Animator().Start(_mainScriptNode);
             // new TextRenderScript().Start(_mainScriptNode);
 
             if (string.IsNullOrEmpty(Settings.Default.SelectedNode) == false)
@@ -349,10 +349,16 @@ namespace MapleManager
             parentNode.ToolTipText = $"Subnodes: {parentNode.Nodes.Count}";
         }
 
-
         private string LoadedFolderPath = "";
+
         private void LoadContentsOfFolder(string folder)
         {
+            if (folder.EndsWith(".exe"))
+            {
+                LoadMapleInstall(folder);
+                return;
+            }
+
             if (!Directory.Exists(folder)) return;
             var fs = new WzFileSystem();
             fs.Init(folder);
@@ -369,26 +375,29 @@ namespace MapleManager
         private void LoadContentsOfWZFiles(params string[] files)
         {
             var key = Prompt("WZ Key?");
-            
+            LoadContentsOfWZFiles(key, files);
+        }
+
+        private void LoadContentsOfWZFiles(string key, params string[] files)
+        {
             var ns = new WzNameSpace();
 
             foreach (var wzFile in files)
             {
-                var package = new WzPackage(wzFile, key, ns);
-                package.Process();
+                try
+                {
+                    var package = new WzPackage(wzFile, key, ns);
+                    package.Process();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Unable to load {0}: {1}", wzFile, ex);
+                }
             }
 
             BeginTreeUpdate();
             LoadContentsSmart(ns);
             EndTreeUpdate();
-        }
-
-        private void LoadContentsOfWZFilesFolder(string folder)
-        {
-            var dirInfo = new DirectoryInfo(folder);
-
-            LoadContentsOfWZFiles(dirInfo.GetDirectories("*.wz").Select(x => x.FullName).ToArray());
-
         }
 
         private void LoadContentsSmart(WzNameSpace ns)
@@ -416,40 +425,17 @@ namespace MapleManager
 
         private void wZToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (false)
-            {
-                if (InfoMessage("This will extract the WZ file? Are you sure?", MessageBoxButtons.OKCancel) ==
-                    DialogResult.Cancel) return;
+            var ofd = new OpenFileDialog();
+            ofd.Filter = "WZ Files|*.wz";
+            ofd.Multiselect = true;
 
-                var ofd = new OpenFileDialog();
-                ofd.FileName = @"C:\Program Files (x86)\MapleGlobalT_2 - kopie\Data.wz";
-                ofd.Filter = "WZ Files|*.wz";
-                ofd.Multiselect = true;
-
-                if (ofd.ShowDialog() != DialogResult.OK) return;
-
-
-                var folderBrowserDialog = new FolderSelect.FolderSelectDialog();
-                if (folderBrowserDialog.ShowDialog() == false) return;
-                ExtractWZFile(folderBrowserDialog.FileName, ofd.FileNames);
-
-                LoadContentsOfFolder(folderBrowserDialog.FileName);
-            }
-            else
-            {
-                var ofd = new OpenFileDialog();
-                ofd.FileName = @"C:\Program Files (x86)\MapleGlobalT_2 - kopie\Data.wz";
-                ofd.Filter = "WZ Files|*.wz";
-                ofd.Multiselect = true;
-
-                if (ofd.ShowDialog() != DialogResult.OK) return;
-                LoadContentsOfWZFiles(ofd.FileNames);
-            }
+            if (ofd.ShowDialog() != DialogResult.OK) return;
+            LoadContentsOfWZFiles(ofd.FileNames);
         }
 
-        private string Prompt(string question)
+        private string Prompt(string question, string defaultText = "")
         {
-            return Microsoft.VisualBasic.Interaction.InputBox(question, "MapleManager");
+            return Microsoft.VisualBasic.Interaction.InputBox(question, "MapleManager", defaultText);
         }
 
         private DialogResult InfoMessage(string msg, MessageBoxButtons buttons = MessageBoxButtons.OK)
@@ -465,7 +451,6 @@ namespace MapleManager
         private void extractWZToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var ofd = new OpenFileDialog();
-            ofd.FileName = @"C:\Program Files (x86)\MapleGlobalT_2 - kopie\Data.wz";
             ofd.Filter = "WZ Files|*.wz";
             ofd.Multiselect = true;
 
@@ -840,6 +825,32 @@ namespace MapleManager
         {
             var sn = tvData.SelectedNode;
             if (sn != null) Clipboard.SetText(sn.FullPath);
+        }
+
+        private void mapleStoryInstallationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var ofd = new OpenFileDialog();
+            ofd.Filter = "MapleStory|*.exe";
+            if (ofd.ShowDialog() != DialogResult.OK) return;
+            LoadMapleInstall(ofd.FileName);
+        }
+
+        private void LoadMapleInstall(string mapleExe)
+        {
+            if (!File.Exists(mapleExe)) return;
+
+            var fvi = FileVersionInfo.GetVersionInfo(mapleExe);
+            var mapleInstallFolder = Path.GetDirectoryName(mapleExe);
+            var wzFilesInFolder = new DirectoryInfo(mapleInstallFolder).
+                GetFiles("*.wz", SearchOption.TopDirectoryOnly).
+                Select(x => x.FullName).
+                ToArray();
+
+            Console.WriteLine("Looks like this is v{0}", fvi.FileMinorPart);
+
+            LoadContentsOfWZFiles(fvi.FileMinorPart.ToString(), wzFilesInFolder);
+            AddLastDir(mapleExe);
+            LoadedFolderPath = mapleInstallFolder;
         }
     }
 }

@@ -36,8 +36,9 @@ namespace MapleManager.Scripts.Animator
         public void Stop()
         {
             Program.MainForm.tvData.AfterSelect -= treeView1_AfterSelect;
-            animationForm.Close();
-            characterGenForm.Close();
+            Program.MainForm.Shown -= putScreenToFront;
+            if (animationForm != null) animationForm.Close();
+            if (characterGenForm != null) characterGenForm.Close();
         }
 
 

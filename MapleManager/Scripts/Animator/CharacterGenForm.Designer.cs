@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CharacterGenForm));
             this.selectedItems = new System.Windows.Forms.ListBox();
             this.button2 = new System.Windows.Forms.Button();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
@@ -36,6 +35,8 @@
             this.toolStripSplitButton1 = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.itemSelectionTree = new System.Windows.Forms.TreeView();
+            this.label1 = new System.Windows.Forms.Label();
+            this.selectionFilter = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -53,7 +54,7 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(704, 13);
+            this.button2.Location = new System.Drawing.Point(707, 38);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 3;
@@ -85,10 +86,10 @@
             // toolStripSplitButton1
             // 
             this.toolStripSplitButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripSplitButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripSplitButton1.Image")));
+            this.toolStripSplitButton1.DropDownButtonWidth = 0;
             this.toolStripSplitButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripSplitButton1.Name = "toolStripSplitButton1";
-            this.toolStripSplitButton1.Size = new System.Drawing.Size(60, 20);
+            this.toolStripSplitButton1.Size = new System.Drawing.Size(49, 20);
             this.toolStripSplitButton1.Text = "Render";
             this.toolStripSplitButton1.ButtonClick += new System.EventHandler(this.RenderCurrentlySelectedItems);
             // 
@@ -102,18 +103,37 @@
             // 
             this.itemSelectionTree.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.itemSelectionTree.Location = new System.Drawing.Point(785, 13);
+            this.itemSelectionTree.Location = new System.Drawing.Point(785, 38);
             this.itemSelectionTree.Name = "itemSelectionTree";
             this.itemSelectionTree.PathSeparator = "/";
-            this.itemSelectionTree.Size = new System.Drawing.Size(336, 432);
+            this.itemSelectionTree.Size = new System.Drawing.Size(336, 407);
             this.itemSelectionTree.TabIndex = 6;
             this.itemSelectionTree.DoubleClick += new System.EventHandler(this.AddCurrentlySelectedTreeNode);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(704, 14);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(32, 13);
+            this.label1.TabIndex = 7;
+            this.label1.Text = "Filter:";
+            // 
+            // selectionFilter
+            // 
+            this.selectionFilter.Location = new System.Drawing.Point(785, 12);
+            this.selectionFilter.Name = "selectionFilter";
+            this.selectionFilter.Size = new System.Drawing.Size(336, 20);
+            this.selectionFilter.TabIndex = 8;
+            this.selectionFilter.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.selectionFilter_KeyPress);
             // 
             // CharacterGenForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1133, 469);
+            this.Controls.Add(this.selectionFilter);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.itemSelectionTree);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.button2);
@@ -139,5 +159,7 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.TreeView itemSelectionTree;
         private System.Windows.Forms.ToolStripSplitButton toolStripSplitButton1;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox selectionFilter;
     }
 }

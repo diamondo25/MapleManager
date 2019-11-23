@@ -1,3 +1,9 @@
+1.1.1:
+- Do not try to load animator by default
+- Error out when loading animator without any wz contents
+- Add support for loading maple install by EXE
+- Add search function in character gen
+
 1.1:
 - Improve animator
 - Add character renderer
