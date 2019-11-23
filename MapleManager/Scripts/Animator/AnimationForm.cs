@@ -276,7 +276,7 @@ namespace MapleManager.Scripts.Animator
             int w = totalBounds.Width;
             int h = totalBounds.Height;
 
-            const bool checkerBoard = true;
+            bool checkerBoard = useCheckerboard.Checked;
 
             using (var backgroundChecker = new Bitmap(w + 1, h + 1))
             {

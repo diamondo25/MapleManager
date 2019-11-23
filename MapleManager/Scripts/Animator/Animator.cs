@@ -102,8 +102,8 @@ namespace MapleManager.Scripts.Animator
                     var link = node.GetString("info/link");
                     if (link != null)
                     {
-                        var path = node.GetFullPath() + "/../" + link;
-                        Trace.WriteLine("Trying to get node @ " + path);
+                        var path = "../" + link + ".img";
+                        Console.WriteLine("Trying to get node @ {0}", path);
                         var tmp = node.GetNode(path);
                         if (tmp != null)
                         {
@@ -125,8 +125,6 @@ namespace MapleManager.Scripts.Animator
                     node = animateableProp;
                 }
             }
-
-
 
             {
                 // Try to render elements

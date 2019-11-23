@@ -1,3 +1,7 @@
+1.1.2:
+- Add checkerboard check for animator
+- Fix link img loading
+
 1.1.1:
 - Do not try to load animator by default
 - Error out when loading animator without any wz contents

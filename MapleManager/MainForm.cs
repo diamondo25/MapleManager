@@ -195,7 +195,7 @@ namespace MapleManager
                 addScript(scriptDir.Name, scriptDir.FullName);
             }
 
-            // new Animator().Start(_mainScriptNode);
+            //new Animator().Start(_mainScriptNode);
             // new TextRenderScript().Start(_mainScriptNode);
 
             if (string.IsNullOrEmpty(Settings.Default.SelectedNode) == false)
